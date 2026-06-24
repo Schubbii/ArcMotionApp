@@ -33,7 +33,7 @@ It blends three influences:
 
 ## Tech stack
 
-Expo SDK 55 · React Native 0.83 · React 19 · TypeScript · react-native-svg ·
+Expo SDK 54 · React Native 0.81 · React 19 · TypeScript · react-native-svg ·
 @react-native-async-storage/async-storage · react-native-safe-area-context.
 
 Theming is a React context exposing the active **palette**; components read tokens
@@ -49,7 +49,7 @@ via `useTheme()` instead of hard-coded colors, so switching themes is instant.
    ```
 3. Scan the QR code with Expo Go (Android) or the Camera app (iOS).
 
-> Uses Expo SDK 55 to match the Expo Go app currently in the stores.
+> Uses Expo SDK 54 to match the Expo Go app currently in the stores.
 
 ## Build store binaries (later)
 
