@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
@@ -13,7 +14,7 @@ interface Props {
 const ITEMS: {
   id: Tab;
   label: string;
-  Icon: (p: { size?: number; color?: string }) => JSX.Element;
+  Icon: (p: { size?: number; color?: string }) => ReactElement;
 }[] = [
   { id: "workout", label: "Workout", Icon: DumbbellIcon },
   { id: "history", label: "History", Icon: CalendarIcon },
