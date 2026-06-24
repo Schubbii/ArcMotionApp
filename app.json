@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "ArcMotion",
+    "slug": "arcmotion",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "arcmotion",
+    "splash": {
+      "backgroundColor": "#0d0f14",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.arcmotion.app"
+    },
+    "android": {
+      "package": "com.arcmotion.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0d0f14"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

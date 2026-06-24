@@ -1,0 +1,141 @@
+import type { ThemeId } from "../types";
+
+/**
+ * A theme is a flat palette of design tokens. Components read colors from the
+ * active palette via useTheme() instead of hard-coding hex values, so switching
+ * a theme instantly recolors the whole app.
+ */
+export interface Palette {
+  /** True for dark themes — drives the status bar / contrast choices. */
+  dark: boolean;
+  bg: string;
+  surface: string;
+  surface2: string;
+  text: string;
+  textMuted: string;
+  textFaint: string;
+  border: string;
+  primary: string;
+  primarySoft: string;
+  onPrimary: string;
+  accent: string;
+  success: string;
+  danger: string;
+  trophy: string;
+  /** Background tint for a completed set row (Hevy-style highlight). */
+  rowDone: string;
+}
+
+export interface ThemeDef {
+  id: ThemeId;
+  name: string;
+  description: string;
+  /** Swatches shown in the theme picker. */
+  swatches: string[];
+  palette: Palette;
+}
+
+export const THEMES: ThemeDef[] = [
+  {
+    id: "volt",
+    name: "Volt",
+    description: "Dark & athletic with an electric lime accent",
+    swatches: ["#0d0f14", "#1a1f2b", "#c6f432", "#ffffff"],
+    palette: {
+      dark: true,
+      bg: "#0d0f14",
+      surface: "#151a23",
+      surface2: "#1d2430",
+      text: "#f2f5fa",
+      textMuted: "#9aa4b5",
+      textFaint: "#5d6675",
+      border: "#262e3b",
+      primary: "#c6f432",
+      primarySoft: "#2c3414",
+      onPrimary: "#121602",
+      accent: "#7cdfee",
+      success: "#3ddc84",
+      danger: "#ff6b6b",
+      trophy: "#ffc857",
+      rowDone: "#1c2b16",
+    },
+  },
+  {
+    id: "ocean",
+    name: "Ocean",
+    description: "Clean & bright, professional blue",
+    swatches: ["#2563eb", "#3b82f6", "#eef2fb", "#0f172a"],
+    palette: {
+      dark: false,
+      bg: "#f4f6fb",
+      surface: "#ffffff",
+      surface2: "#eef2fb",
+      text: "#0f172a",
+      textMuted: "#64748b",
+      textFaint: "#94a3b8",
+      border: "#e7ecf5",
+      primary: "#2563eb",
+      primarySoft: "#e8eeff",
+      onPrimary: "#ffffff",
+      accent: "#0ea5e9",
+      success: "#16a34a",
+      danger: "#ef4444",
+      trophy: "#f59e0b",
+      rowDone: "#e7f7ee",
+    },
+  },
+  {
+    id: "carbon",
+    name: "Carbon",
+    description: "Deep dark with a cool indigo glow",
+    swatches: ["#0b0d12", "#171b24", "#6d8bff", "#ffffff"],
+    palette: {
+      dark: true,
+      bg: "#0b0d12",
+      surface: "#141822",
+      surface2: "#1c2230",
+      text: "#eef1f7",
+      textMuted: "#8b94a7",
+      textFaint: "#565f73",
+      border: "#242b3a",
+      primary: "#6d8bff",
+      primarySoft: "#1e2747",
+      onPrimary: "#ffffff",
+      accent: "#a78bfa",
+      success: "#34d399",
+      danger: "#fb7185",
+      trophy: "#fbbf24",
+      rowDone: "#16233f",
+    },
+  },
+  {
+    id: "matcha",
+    name: "Matcha Strawberry",
+    description: "Soft greens & strawberry pinks",
+    swatches: ["#4A6644", "#C66F80", "#9FAA74", "#FCEBF1"],
+    palette: {
+      dark: false,
+      bg: "#fcebf1",
+      surface: "#ffffff",
+      surface2: "#f6eee0",
+      text: "#3f5a3a",
+      textMuted: "#8a9a68",
+      textFaint: "#b7af9b",
+      border: "#ece0cd",
+      primary: "#4a6644",
+      primarySoft: "#f4c7d0",
+      onPrimary: "#fceef2",
+      accent: "#c66f80",
+      success: "#4a6644",
+      danger: "#c66f80",
+      trophy: "#c66f80",
+      rowDone: "#eef3e2",
+    },
+  },
+];
+
+export const DEFAULT_THEME: ThemeId = "volt";
+
+export function paletteFor(id: ThemeId): Palette {
+  return (THEMES.find((t) => t.id === id) ?? THEMES[0]).palette;
+}
