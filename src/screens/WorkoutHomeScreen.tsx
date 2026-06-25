@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
 import { Card, PrimaryButton, SectionTitle } from "../components/ui";
+import { ArcLogo } from "../components/ArcLogo";
 import { PlusIcon, ChevronRight, ClockIcon, FlameIcon, TrashIcon } from "../components/Icons";
 import { formatDuration, greeting } from "../lib/format";
 import { workoutVolume, workoutSetCount } from "../lib/stats";
@@ -27,9 +28,8 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
       <View style={{ marginBottom: 8 }}>
         <Text style={[styles.greet, { color: t.textMuted }]}>{greeting()}</Text>
-        <Text style={[styles.brand, { color: t.text }]}>
-          Arc<Text style={{ color: t.primary }}>Motion</Text>
-        </Text>
+        <ArcLogo width={150} color={t.text} />
+        <Text style={[styles.wordmark, { color: t.textMuted }]}>ARCMOTION</Text>
       </View>
 
       {active && (
@@ -120,7 +120,7 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
 
 const styles = StyleSheet.create({
   greet: { fontSize: 14, fontWeight: "600" },
-  brand: { fontSize: 30, fontWeight: "900", letterSpacing: -0.5 },
+  wordmark: { fontSize: 14, fontWeight: "900", letterSpacing: 3, marginTop: 2 },
   resume: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1.5, marginTop: 14 },
   resumeLabel: { fontSize: 11, fontWeight: "900", letterSpacing: 0.6 },
   resumeTitle: { fontSize: 18, fontWeight: "800", marginTop: 3 },

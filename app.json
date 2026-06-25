@@ -4,10 +4,12 @@
     "slug": "arcmotion",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": "arcmotion",
     "splash": {
-      "backgroundColor": "#0d0f14",
+      "image": "./assets/splash-icon.png",
+      "backgroundColor": "#ffffff",
       "resizeMode": "contain"
     },
     "assetBundlePatterns": ["**/*"],
@@ -18,11 +20,13 @@
     "android": {
       "package": "com.arcmotion.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0d0f14"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
       }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
     }
   }
 }
