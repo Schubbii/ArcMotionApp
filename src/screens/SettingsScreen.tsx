@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
 import { THEMES } from "../theme/themes";
@@ -7,7 +7,7 @@ import { CheckIcon } from "../components/Icons";
 
 export function SettingsScreen() {
   const t = useTheme();
-  const { settings, setTheme, setUnit, workouts } = useAppData();
+  const { settings, setTheme, setUnit, setWeightStep, setRepStep, workouts } = useAppData();
 
   return (
     <View style={{ flex: 1 }}>
@@ -65,6 +65,22 @@ export function SettingsScreen() {
           </View>
         </Card>
 
+        <SectionTitle>Increments</SectionTitle>
+        <Text style={{ color: t.textMuted, fontSize: 13, marginHorizontal: 4, marginBottom: 12 }}>
+          How much the +/- buttons change weight and reps while logging.
+        </Text>
+        <Card>
+          <StepControl
+            label={`Weight step (${settings.unit})`}
+            value={settings.weightStep}
+            step={0.5}
+            decimals
+            onChange={setWeightStep}
+          />
+          <View style={{ height: 14 }} />
+          <StepControl label="Reps step" value={settings.repStep} step={1} onChange={setRepStep} />
+        </Card>
+
         <SectionTitle>About</SectionTitle>
         <Card>
           <Text style={{ fontWeight: "800", color: t.text, fontSize: 15 }}>ArcMotion</Text>
@@ -78,6 +94,53 @@ export function SettingsScreen() {
   );
 }
 
+function StepControl({
+  label,
+  value,
+  step,
+  decimals = false,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  step: number;
+  decimals?: boolean;
+  onChange: (n: number) => void;
+}) {
+  const t = useTheme();
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const display = decimals ? String(value) : String(Math.round(value));
+  return (
+    <View style={styles.stepRow}>
+      <Text style={{ color: t.text, fontWeight: "700", fontSize: 15, flex: 1 }}>{label}</Text>
+      <View style={styles.stepper}>
+        <TouchableOpacity
+          style={[styles.stepBtn, { backgroundColor: t.surface2 }]}
+          onPress={() => onChange(round2(value - step))}
+        >
+          <Text style={[styles.stepSign, { color: t.text }]}>−</Text>
+        </TouchableOpacity>
+        <TextInput
+          style={[styles.stepInput, { color: t.text, backgroundColor: t.surface2 }]}
+          keyboardType="numeric"
+          value={display}
+          onChangeText={(txt) => {
+            const n = parseFloat(txt.replace(",", "."));
+            if (!Number.isNaN(n)) onChange(n);
+          }}
+          selectTextOnFocus
+        />
+        <TouchableOpacity
+          style={[styles.stepBtn, { backgroundColor: t.surface2 }]}
+          onPress={() => onChange(round2(value + step))}
+        >
+          <Text style={[styles.stepSign, { color: t.text }]}>+</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   themeCard: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 16, marginBottom: 12, borderWidth: 2 },
   preview: { width: 52, height: 52, borderRadius: 13, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 },
@@ -85,4 +148,9 @@ const styles = StyleSheet.create({
   check: { width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   segment: { flexDirection: "row", borderRadius: 12, padding: 4, gap: 4 },
   segBtn: { flex: 1, paddingVertical: 10, borderRadius: 9, alignItems: "center" },
+  stepRow: { flexDirection: "row", alignItems: "center" },
+  stepper: { flexDirection: "row", alignItems: "center", gap: 6 },
+  stepBtn: { width: 38, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  stepSign: { fontSize: 22, fontWeight: "600", lineHeight: 26 },
+  stepInput: { width: 56, height: 40, borderRadius: 10, fontSize: 16, fontWeight: "800", textAlign: "center" },
 });

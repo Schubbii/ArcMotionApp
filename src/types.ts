@@ -69,6 +69,9 @@ export type WeightUnit = "kg" | "lb";
 export interface Settings {
   theme: ThemeId;
   unit: WeightUnit;
+  /** Amount the +/- buttons add/subtract for weight and reps. */
+  weightStep: number;
+  repStep: number;
 }
 
 /** Progress-graph metrics, matching the Hevy analysis screen. */

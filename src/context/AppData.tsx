@@ -55,10 +55,12 @@ interface AppDataValue {
   // settings
   setTheme: (theme: ThemeId) => void;
   setUnit: (unit: WeightUnit) => void;
+  setWeightStep: (n: number) => void;
+  setRepStep: (n: number) => void;
 }
 
 const Ctx = createContext<AppDataValue | null>(null);
-const DEFAULT_SETTINGS: Settings = { theme: DEFAULT_THEME, unit: "kg" };
+const DEFAULT_SETTINGS: Settings = { theme: DEFAULT_THEME, unit: "kg", weightStep: 2, repStep: 1 };
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -83,7 +85,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setRoutines(ro);
       setWorkouts(wo);
       setActive(ac);
-      setSettings(se);
+      // Merge with defaults so settings saved by older versions gain new fields.
+      setSettings({ ...DEFAULT_SETTINGS, ...se });
       loaded.current = true;
       setReady(true);
     })();
@@ -219,6 +222,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
       setTheme: (theme) => setSettings((p) => ({ ...p, theme })),
       setUnit: (unit) => setSettings((p) => ({ ...p, unit })),
+      setWeightStep: (n) => setSettings((p) => ({ ...p, weightStep: Math.max(0.1, n) })),
+      setRepStep: (n) => setSettings((p) => ({ ...p, repStep: Math.max(1, Math.round(n)) })),
     };
   }, [ready, exercises, routines, workouts, active, settings, exerciseById, buildEntry]);
 

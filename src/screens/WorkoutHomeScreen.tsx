@@ -26,9 +26,9 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
-      <View style={{ marginBottom: 8 }}>
-        <Text style={[styles.greet, { color: t.textMuted }]}>{greeting()}</Text>
-        <ArcLogo width={150} color={t.text} />
+      <View style={{ marginBottom: 8, alignItems: "center" }}>
+        <Text style={[styles.greet, { color: t.textMuted, alignSelf: "flex-start" }]}>{greeting()}</Text>
+        <ArcLogo width={170} color={t.text} />
         <Text style={[styles.wordmark, { color: t.textMuted }]}>ARCMOTION</Text>
       </View>
 

@@ -84,7 +84,16 @@ export function Pill({
         { backgroundColor: active ? t.primary : t.surface2, borderColor: active ? t.primary : t.border },
       ]}
     >
-      <Text style={{ color: active ? t.onPrimary : t.textMuted, fontWeight: "700", fontSize: 13 }}>
+      <Text
+        style={{
+          color: active ? t.onPrimary : t.textMuted,
+          fontWeight: "700",
+          fontSize: 13,
+          lineHeight: 16,
+          includeFontPadding: false,
+          textAlignVertical: "center",
+        }}
+      >
         {label}
       </Text>
     </TouchableOpacity>
@@ -102,5 +111,13 @@ export const ui = StyleSheet.create({
   emptyText: { textAlign: "center", fontSize: 14, lineHeight: 20 },
   btn: { flexDirection: "row", gap: 8, borderRadius: 14, paddingVertical: 15, alignItems: "center", justifyContent: "center" },
   btnText: { fontSize: 15, fontWeight: "800" },
-  pill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1 },
+  pill: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1,
+    minHeight: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

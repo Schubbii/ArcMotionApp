@@ -14,11 +14,12 @@ interface Props {
   color?: string;
 }
 
-export function ArcLogo({ width = 130, color = "#000" }: Props) {
-  // Crop tightly around the mark (bbox ~ x[211..1444] y[619..907]).
-  const height = width * 0.26;
+export function ArcLogo({ width = 150, color = "#000" }: Props) {
+  // Tight viewBox = exact path bounding box, so the mark fills the SVG with no
+  // asymmetric padding and reads as perfectly centered wherever it's placed.
+  const height = width * (287.89 / 1233.84);
   return (
-    <Svg width={width} height={height} viewBox="195 600 1300 330">
+    <Svg width={width} height={height} viewBox="210.94 619 1233.84 287.89">
       <Path d={MARK_PATH} fill={color} />
     </Svg>
   );

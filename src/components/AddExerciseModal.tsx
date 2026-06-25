@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   cancel: { fontSize: 15, fontWeight: "600" },
   search: { flexDirection: "row", alignItems: "center", gap: 8, marginHorizontal: 16, paddingHorizontal: 12, height: 44, borderRadius: 12, borderWidth: 1 },
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 0 },
-  chips: { gap: 8, paddingHorizontal: 16, paddingVertical: 12 },
+  chips: { gap: 8, paddingHorizontal: 16, paddingVertical: 12, alignItems: "center" },
   row: { flexDirection: "row", alignItems: "center", gap: 12, padding: 12, borderRadius: 14, marginBottom: 10, borderWidth: 1 },
   avatar: { width: 40, height: 40, borderRadius: 11, alignItems: "center", justifyContent: "center" },
   rowTitle: { fontWeight: "700", fontSize: 15 },

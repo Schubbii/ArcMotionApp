@@ -16,7 +16,7 @@ import { AddExerciseModal } from "../components/AddExerciseModal";
 import { CheckIcon, ChevronLeft, PlusIcon, TrashIcon } from "../components/Icons";
 import { PrimaryButton } from "../components/ui";
 import { formatDuration } from "../lib/format";
-import { previousSets, workingSets } from "../lib/stats";
+import { workingSets } from "../lib/stats";
 
 interface Props {
   onClose: () => void;
@@ -28,7 +28,6 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
   const {
     active,
     settings,
-    workouts,
     exerciseById,
     setActiveTitle,
     addExerciseToActive,
@@ -116,7 +115,6 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
 
         {active.entries.map((entry) => {
           const ex = exerciseById(entry.exerciseId);
-          const prev = previousSets(workouts, entry.exerciseId, active.id);
           return (
             <View key={entry.id} style={[styles.exCard, { backgroundColor: t.surface, borderColor: t.border }]}>
               <View style={styles.exHead}>
@@ -129,25 +127,27 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
               {/* column headers */}
               <View style={styles.colHead}>
                 <Text style={[styles.colSet, styles.colLabel, { color: t.textMuted }]}>SET</Text>
-                <Text style={[styles.colPrev, styles.colLabel, { color: t.textMuted }]}>PREVIOUS</Text>
-                <Text style={[styles.colNum, styles.colLabel, { color: t.textMuted }]}>{unit.toUpperCase()}</Text>
-                <Text style={[styles.colNum, styles.colLabel, { color: t.textMuted }]}>REPS</Text>
+                <Text style={[styles.colGroup, styles.colLabel, styles.colLabelCenter, { color: t.textMuted }]}>
+                  WEIGHT ({unit})
+                </Text>
+                <Text style={[styles.colGroup, styles.colLabel, styles.colLabelCenter, { color: t.textMuted }]}>
+                  REPS
+                </Text>
                 <View style={styles.colCheck} />
               </View>
 
               {entry.sets.map((sset, i) => {
                 const workingIndex =
                   entry.sets.slice(0, i + 1).filter((x) => !x.warmup).length;
-                const prevSet = prev[i];
                 return (
                   <SetRow
                     key={sset.id}
                     set={sset}
                     label={sset.warmup ? "W" : String(workingIndex)}
-                    prevText={prevSet ? `${prevSet.weight}${unit} × ${prevSet.reps}` : "—"}
-                    unit={unit}
-                    t={t}
                     weighted={ex?.weighted ?? true}
+                    weightStep={settings.weightStep}
+                    repStep={settings.repStep}
+                    t={t}
                     onToggleWarmup={() => toggleWarmup(entry.id, sset.id)}
                     onChangeWeight={(weight) => updateSet(entry.id, sset.id, { weight })}
                     onChangeReps={(reps) => updateSet(entry.id, sset.id, { reps })}
@@ -211,12 +211,66 @@ function Stat({
   );
 }
 
+function round2(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
+/** A compact [−][value][+] stepper. The value stays editable for custom input. */
+function StepField({
+  value,
+  step,
+  editable,
+  t,
+  onChange,
+}: {
+  value: number;
+  step: number;
+  editable: boolean;
+  t: ReturnType<typeof useTheme>;
+  onChange: (n: number) => void;
+}) {
+  const parse = (txt: string) => {
+    const n = parseFloat(txt.replace(",", "."));
+    return Number.isNaN(n) ? 0 : n;
+  };
+  return (
+    <View style={styles.stepField}>
+      <TouchableOpacity
+        style={[styles.stepBtn, { backgroundColor: t.surface2 }]}
+        onPress={() => editable && onChange(Math.max(0, round2(value - step)))}
+        disabled={!editable}
+        hitSlop={4}
+      >
+        <Text style={[styles.stepSign, { color: editable ? t.text : t.textFaint }]}>−</Text>
+      </TouchableOpacity>
+      <TextInput
+        style={[styles.stepInput, { color: editable ? t.text : t.textFaint, backgroundColor: t.surface2 }]}
+        keyboardType="numeric"
+        editable={editable}
+        value={value === 0 ? "" : String(value)}
+        onChangeText={(txt) => onChange(parse(txt))}
+        placeholder="0"
+        placeholderTextColor={t.textFaint}
+        selectTextOnFocus
+      />
+      <TouchableOpacity
+        style={[styles.stepBtn, { backgroundColor: t.surface2 }]}
+        onPress={() => editable && onChange(round2(value + step))}
+        disabled={!editable}
+        hitSlop={4}
+      >
+        <Text style={[styles.stepSign, { color: editable ? t.text : t.textFaint }]}>+</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 function SetRow({
   set,
   label,
-  prevText,
-  unit,
   weighted,
+  weightStep,
+  repStep,
   t,
   onToggleWarmup,
   onChangeWeight,
@@ -226,9 +280,9 @@ function SetRow({
 }: {
   set: WorkoutSet;
   label: string;
-  prevText: string;
-  unit: string;
   weighted: boolean;
+  weightStep: number;
+  repStep: number;
   t: ReturnType<typeof useTheme>;
   onToggleWarmup: () => void;
   onChangeWeight: (n: number) => void;
@@ -236,60 +290,23 @@ function SetRow({
   onToggleDone: () => void;
   onRemove: () => void;
 }) {
-  const parse = (txt: string) => {
-    const n = parseFloat(txt.replace(",", "."));
-    return Number.isNaN(n) ? 0 : n;
-  };
   return (
     <View style={[styles.setRow, set.done && { backgroundColor: t.rowDone }]}>
-      <TouchableOpacity
-        style={styles.colSet}
-        onPress={onToggleWarmup}
-        onLongPress={onRemove}
-        hitSlop={6}
-      >
-        <Text
-          style={{
-            color: set.warmup ? t.trophy : t.text,
-            fontWeight: "800",
-            fontSize: 15,
-            textAlign: "center",
-          }}
-        >
+      <TouchableOpacity style={styles.colSet} onPress={onToggleWarmup} onLongPress={onRemove} hitSlop={6}>
+        <Text style={{ color: set.warmup ? t.trophy : t.text, fontWeight: "800", fontSize: 15, textAlign: "center" }}>
           {label}
         </Text>
       </TouchableOpacity>
 
-      <Text style={[styles.colPrev, { color: t.textFaint, fontSize: 12.5 }]} numberOfLines={1}>
-        {prevText}
-      </Text>
-
-      <TextInput
-        style={[styles.colNum, styles.cell, { color: weighted ? t.text : t.textFaint, backgroundColor: t.surface2 }]}
-        keyboardType="numeric"
-        editable={weighted}
-        value={set.weight === 0 ? "" : String(set.weight)}
-        onChangeText={(txt) => onChangeWeight(parse(txt))}
-        placeholder="0"
-        placeholderTextColor={t.textFaint}
-        selectTextOnFocus
-      />
-      <TextInput
-        style={[styles.colNum, styles.cell, { color: t.text, backgroundColor: t.surface2 }]}
-        keyboardType="numeric"
-        value={set.reps === 0 ? "" : String(set.reps)}
-        onChangeText={(txt) => onChangeReps(parse(txt))}
-        placeholder="0"
-        placeholderTextColor={t.textFaint}
-        selectTextOnFocus
-      />
+      <View style={styles.colGroup}>
+        <StepField value={set.weight} step={weightStep} editable={weighted} t={t} onChange={onChangeWeight} />
+      </View>
+      <View style={styles.colGroup}>
+        <StepField value={set.reps} step={repStep} editable t={t} onChange={onChangeReps} />
+      </View>
 
       <TouchableOpacity
-        style={[
-          styles.colCheck,
-          styles.check,
-          { backgroundColor: set.done ? t.success : t.surface2 },
-        ]}
+        style={[styles.colCheck, styles.check, { backgroundColor: set.done ? t.success : t.surface2 }]}
         onPress={onToggleDone}
       >
         <CheckIcon size={15} color={set.done ? "#fff" : t.textFaint} />
@@ -307,14 +324,17 @@ const styles = StyleSheet.create({
   exCard: { borderRadius: 16, borderWidth: 1, padding: 14, marginBottom: 14 },
   exHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
   exName: { fontSize: 16, fontWeight: "800", flex: 1 },
-  colHead: { flexDirection: "row", alignItems: "center", paddingBottom: 6 },
+  colHead: { flexDirection: "row", alignItems: "center", paddingBottom: 8 },
   colLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 0.3 },
-  setRow: { flexDirection: "row", alignItems: "center", paddingVertical: 6, borderRadius: 8, marginVertical: 1 },
-  colSet: { width: 36, alignItems: "center" },
-  colPrev: { flex: 1, paddingHorizontal: 4 },
-  colNum: { width: 58, textAlign: "center" },
-  colCheck: { width: 40, alignItems: "center" },
-  cell: { height: 38, borderRadius: 9, fontSize: 15, fontWeight: "700", marginHorizontal: 4 },
-  check: { height: 34, width: 34, borderRadius: 9, alignItems: "center", justifyContent: "center", alignSelf: "center" },
+  colLabelCenter: { textAlign: "center" },
+  setRow: { flexDirection: "row", alignItems: "center", paddingVertical: 6, borderRadius: 8, marginVertical: 1, gap: 6 },
+  colSet: { width: 30, alignItems: "center" },
+  colGroup: { flex: 1, paddingHorizontal: 2 },
+  colCheck: { width: 38, alignItems: "center" },
+  check: { height: 38, width: 38, borderRadius: 10, alignItems: "center", justifyContent: "center", alignSelf: "center" },
+  stepField: { flexDirection: "row", alignItems: "center", gap: 4 },
+  stepBtn: { width: 30, height: 38, borderRadius: 9, alignItems: "center", justifyContent: "center" },
+  stepSign: { fontSize: 22, fontWeight: "600", lineHeight: 26 },
+  stepInput: { flex: 1, height: 38, borderRadius: 9, fontSize: 15, fontWeight: "800", textAlign: "center", minWidth: 36, paddingHorizontal: 0 },
   addSet: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, borderRadius: 10, marginTop: 8 },
 });
