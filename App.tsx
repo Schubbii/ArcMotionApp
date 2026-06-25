@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, BackHandler, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AppDataProvider, useAppData } from "./src/context/AppData";
 import { ThemeContext } from "./src/theme/ThemeContext";
@@ -52,6 +52,27 @@ function Themed() {
 function Router() {
   const [tab, setTab] = useState<Tab>("workout");
   const [route, setRoute] = useState<Route>({ name: "tabs" });
+
+  // Hook Android's back button / edge-swipe gesture into our navigation so it
+  // goes "up" through the app instead of immediately closing it.
+  useEffect(() => {
+    const onBack = () => {
+      // On a pushed full-screen route → return to the tabs.
+      if (route.name !== "tabs") {
+        setRoute({ name: "tabs" });
+        return true;
+      }
+      // On a secondary tab → go back to the Workout home tab.
+      if (tab !== "workout") {
+        setTab("workout");
+        return true;
+      }
+      // Already home → let the system handle it (exit the app).
+      return false;
+    };
+    const sub = BackHandler.addEventListener("hardwareBackPress", onBack);
+    return () => sub.remove();
+  }, [tab, route]);
 
   if (route.name === "active") {
     return <ActiveWorkoutScreen onClose={() => setRoute({ name: "tabs" })} />;
