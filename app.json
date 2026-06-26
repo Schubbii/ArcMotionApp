@@ -15,10 +15,12 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.arcmotion.app"
+      "bundleIdentifier": "com.arcmotion.app",
+      "buildNumber": "1"
     },
     "android": {
       "package": "com.arcmotion.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
