@@ -72,6 +72,8 @@ export interface Settings {
   /** Amount the +/- buttons add/subtract for weight and reps. */
   weightStep: number;
   repStep: number;
+  /** User's display name, shown in the greeting. Empty until onboarded. */
+  name: string;
 }
 
 /** Progress-graph metrics, matching the Hevy analysis screen. */

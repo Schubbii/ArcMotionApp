@@ -14,7 +14,7 @@ interface Props {
 
 export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
   const t = useTheme();
-  const { active, routines, workouts, exerciseById, startEmptyWorkout, startRoutine, deleteRoutine } =
+  const { active, routines, workouts, settings, exerciseById, startEmptyWorkout, startRoutine, deleteRoutine } =
     useAppData();
 
   const start = (fn: () => void) => {
@@ -27,7 +27,12 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
   return (
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
       <View style={{ marginBottom: 8, alignItems: "center" }}>
-        <Text style={[styles.greet, { color: t.textMuted, alignSelf: "flex-start" }]}>{greeting()}</Text>
+        <Text style={[styles.greet, { color: t.text, alignSelf: "flex-start" }]}>
+          {greeting()}
+          {settings.name ? (
+            <Text>, <Text style={{ color: t.primary }}>{settings.name}</Text></Text>
+          ) : null}
+        </Text>
         <ArcLogo width={170} color={t.text} />
         <Text style={[styles.wordmark, { color: t.textMuted }]}>ARCMOTION</Text>
       </View>
@@ -119,7 +124,7 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
 }
 
 const styles = StyleSheet.create({
-  greet: { fontSize: 14, fontWeight: "600" },
+  greet: { fontSize: 17, fontWeight: "800", marginBottom: 4 },
   wordmark: { fontSize: 14, fontWeight: "900", letterSpacing: 3, marginTop: 2 },
   resume: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1.5, marginTop: 14 },
   resumeLabel: { fontSize: 11, fontWeight: "900", letterSpacing: 0.6 },

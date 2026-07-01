@@ -7,12 +7,27 @@ import { CheckIcon } from "../components/Icons";
 
 export function SettingsScreen() {
   const t = useTheme();
-  const { settings, setTheme, setUnit, setWeightStep, setRepStep, workouts } = useAppData();
+  const { settings, setTheme, setUnit, setWeightStep, setRepStep, setName, workouts } = useAppData();
 
   return (
     <View style={{ flex: 1 }}>
       <ScreenTitle title="Settings" sub="Make ArcMotion yours" />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
+        <SectionTitle>Profile</SectionTitle>
+        <Card>
+          <Text style={{ color: t.textMuted, fontSize: 13, fontWeight: "700", marginBottom: 8 }}>
+            Your name
+          </Text>
+          <TextInput
+            value={settings.name}
+            onChangeText={setName}
+            placeholder="Your name"
+            placeholderTextColor={t.textMuted}
+            style={[styles.nameInput, { backgroundColor: t.surface2, color: t.text, borderColor: t.border }]}
+            maxLength={40}
+          />
+        </Card>
+
         <SectionTitle>Color Theme</SectionTitle>
         <Text style={{ color: t.textMuted, fontSize: 13, marginHorizontal: 4, marginBottom: 12 }}>
           Choose a look — it instantly recolors the whole app.
@@ -153,4 +168,5 @@ const styles = StyleSheet.create({
   stepBtn: { width: 38, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   stepSign: { fontSize: 22, fontWeight: "600", lineHeight: 26 },
   stepInput: { width: 56, height: 40, borderRadius: 10, fontSize: 16, fontWeight: "800", textAlign: "center" },
+  nameInput: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, fontWeight: "600" },
 });

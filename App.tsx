@@ -13,6 +13,7 @@ import { HistoryScreen } from "./src/screens/HistoryScreen";
 import { ProgressScreen } from "./src/screens/ProgressScreen";
 import { ExerciseDetailScreen } from "./src/screens/ExerciseDetailScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
+import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 
 export default function App() {
   return (
@@ -39,10 +40,14 @@ function Themed() {
     <ThemeContext.Provider value={palette}>
       <StatusBar style={palette.dark ? "light" : "dark"} />
       <SafeAreaView style={[styles.root, { backgroundColor: palette.bg }]} edges={["top"]}>
-        {ready ? <Router /> : (
+        {!ready ? (
           <View style={styles.loading}>
             <ActivityIndicator color={palette.primary} size="large" />
           </View>
+        ) : settings.name.trim() === "" ? (
+          <OnboardingScreen />
+        ) : (
+          <Router />
         )}
       </SafeAreaView>
     </ThemeContext.Provider>
