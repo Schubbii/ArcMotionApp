@@ -47,15 +47,14 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: NAV_CLEARANCE }}>
-      <View style={{ marginBottom: 8, alignItems: "center" }}>
-        <Text style={[styles.greet, { color: t.text, alignSelf: "flex-start" }]}>
+      <View style={styles.header}>
+        <Text style={[styles.greet, { color: t.text }]}>
           {greeting()}
           {settings.name ? (
             <Text>, <Text style={{ color: t.primary }}>{settings.name}</Text></Text>
           ) : null}
         </Text>
-        <ArcLogo width={170} color={t.text} />
-        <Text style={[styles.wordmark, { color: t.textMuted }]}>ARCMOTION</Text>
+        <ArcLogo width={44} color={t.text} />
       </View>
 
       {active && (
@@ -153,8 +152,14 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
 }
 
 const styles = StyleSheet.create({
-  greet: { fontSize: 17, fontWeight: "800", marginBottom: 4 },
-  wordmark: { fontSize: 14, fontWeight: "900", letterSpacing: 3, marginTop: 2 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    gap: 12,
+  },
+  greet: { fontSize: 19, fontWeight: "800", flex: 1 },
   resume: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1.5, marginTop: 14 },
   resumeLabel: { fontSize: 11, fontWeight: "900", letterSpacing: 0.6 },
   resumeTitle: { fontSize: 18, fontWeight: "800", marginTop: 3 },
