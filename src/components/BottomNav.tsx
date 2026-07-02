@@ -47,19 +47,20 @@ export function BottomNav({ active, onChange }: Props) {
 
   const [layouts, setLayouts] = useState<Array<{ x: number; width: number } | undefined>>([]);
   const indicatorX = useRef(new Animated.Value(0)).current;
-  const indicatorW = useRef(new Animated.Value(0)).current;
   const measured = useRef(false);
 
+  // All tabs are flex:1 and therefore equally wide, so only the X position
+  // needs animating — width is set statically from the measured layout. This
+  // keeps the whole animation on the native driver (width can't be
+  // natively animated and would crash when mixed with a native transform).
   useEffect(() => {
     const l = layouts[activeIndex];
     if (!l) return;
     const toX = l.x + PILL_INSET;
-    const toW = l.width - PILL_INSET * 2;
 
     if (!measured.current) {
       // First measurement: snap into place, don't slide in from the corner.
       indicatorX.setValue(toX);
-      indicatorW.setValue(toW);
       measured.current = true;
       return;
     }
@@ -69,13 +70,7 @@ export function BottomNav({ active, onChange }: Props) {
       speed: 18,
       bounciness: 6,
     }).start();
-    Animated.spring(indicatorW, {
-      toValue: toW,
-      useNativeDriver: false,
-      speed: 18,
-      bounciness: 6,
-    }).start();
-  }, [activeIndex, layouts, indicatorX, indicatorW]);
+  }, [activeIndex, layouts, indicatorX]);
 
   const handleItemLayout = (index: number) => (e: LayoutChangeEvent) => {
     const { x, width } = e.nativeEvent.layout;
@@ -99,7 +94,7 @@ export function BottomNav({ active, onChange }: Props) {
                   backgroundColor: t.primarySoft,
                   borderColor: t.primary,
                   shadowColor: t.primary,
-                  width: indicatorW,
+                  width: (layouts[activeIndex]?.width ?? 0) - PILL_INSET * 2,
                   transform: [{ translateX: indicatorX }],
                 },
               ]}
