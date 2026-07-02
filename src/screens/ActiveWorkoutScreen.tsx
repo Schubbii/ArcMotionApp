@@ -14,6 +14,7 @@ import { useTheme } from "../theme/ThemeContext";
 import type { WorkoutSet } from "../types";
 import { AddExerciseModal } from "../components/AddExerciseModal";
 import { Glass } from "../components/Glass";
+import { PressableScale } from "../components/motion";
 import { CheckIcon, ChevronLeft, PlusIcon, TrashIcon } from "../components/Icons";
 import { PrimaryButton } from "../components/ui";
 import { formatDuration } from "../lib/format";
@@ -95,9 +96,9 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
           placeholder="Workout"
           placeholderTextColor={t.textMuted}
         />
-        <TouchableOpacity onPress={confirmFinish} style={[styles.finish, { backgroundColor: t.primary }]}>
+        <PressableScale onPress={confirmFinish} scaleTo={0.93} style={[styles.finish, { backgroundColor: t.primary }]}>
           <Text style={{ color: t.onPrimary, fontWeight: "800", fontSize: 14 }}>Finish</Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
 
       {/* Stats bar */}
@@ -162,13 +163,13 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
                 );
               })}
 
-              <TouchableOpacity
+              <PressableScale
                 style={[styles.addSet, { backgroundColor: t.surface2 }]}
                 onPress={() => addSet(entry.id)}
               >
                 <PlusIcon size={16} color={t.text} />
                 <Text style={{ color: t.text, fontWeight: "700", fontSize: 13 }}>Add Set</Text>
-              </TouchableOpacity>
+              </PressableScale>
             </Glass>
           );
         })}
@@ -240,14 +241,15 @@ function StepField({
   };
   return (
     <View style={styles.stepField}>
-      <TouchableOpacity
+      <PressableScale
         style={[styles.stepBtn, { backgroundColor: t.surface2 }]}
         onPress={() => editable && onChange(Math.max(0, round2(value - step)))}
         disabled={!editable}
+        scaleTo={0.85}
         hitSlop={4}
       >
         <Text style={[styles.stepSign, { color: editable ? t.text : t.textFaint }]}>−</Text>
-      </TouchableOpacity>
+      </PressableScale>
       <TextInput
         style={[styles.stepInput, { color: editable ? t.text : t.textFaint, backgroundColor: t.surface2 }]}
         keyboardType="numeric"
@@ -258,14 +260,15 @@ function StepField({
         placeholderTextColor={t.textFaint}
         selectTextOnFocus
       />
-      <TouchableOpacity
+      <PressableScale
         style={[styles.stepBtn, { backgroundColor: t.surface2 }]}
         onPress={() => editable && onChange(round2(value + step))}
         disabled={!editable}
+        scaleTo={0.85}
         hitSlop={4}
       >
         <Text style={[styles.stepSign, { color: editable ? t.text : t.textFaint }]}>+</Text>
-      </TouchableOpacity>
+      </PressableScale>
     </View>
   );
 }
@@ -310,12 +313,13 @@ function SetRow({
         <StepField value={set.reps} step={repStep} editable t={t} onChange={onChangeReps} />
       </View>
 
-      <TouchableOpacity
+      <PressableScale
         style={[styles.colCheck, styles.check, { backgroundColor: set.done ? t.success : t.surface2 }]}
         onPress={onToggleDone}
+        scaleTo={0.8}
       >
         <CheckIcon size={15} color={set.done ? "#fff" : t.textFaint} />
-      </TouchableOpacity>
+      </PressableScale>
     </View>
   );
 }

@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { StyleSheet, Text, TouchableOpacity, View, type ViewStyle } from "react-native";
+import { StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { useTheme } from "../theme/ThemeContext";
 import { Glass } from "./Glass";
+import { PressableScale } from "./motion";
 
 export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   return <Glass style={[ui.card, style ?? {}]}>{children}</Glass>;
@@ -37,28 +38,20 @@ type BtnProps = { title: string; onPress: () => void; style?: ViewStyle; icon?: 
 export function PrimaryButton({ title, onPress, style, icon }: BtnProps) {
   const t = useTheme();
   return (
-    <TouchableOpacity
-      style={[ui.btn, { backgroundColor: t.primary }, style]}
-      onPress={onPress}
-      activeOpacity={0.85}
-    >
+    <PressableScale style={[ui.btn, { backgroundColor: t.primary }, style]} onPress={onPress}>
       {icon}
       <Text style={[ui.btnText, { color: t.onPrimary }]}>{title}</Text>
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 
 export function GhostButton({ title, onPress, style, icon }: BtnProps) {
   const t = useTheme();
   return (
-    <TouchableOpacity
-      style={[ui.btn, { backgroundColor: t.surface2 }, style]}
-      onPress={onPress}
-      activeOpacity={0.85}
-    >
+    <PressableScale style={[ui.btn, { backgroundColor: t.surface2 }, style]} onPress={onPress}>
       {icon}
       <Text style={[ui.btnText, { color: t.text }]}>{title}</Text>
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 
@@ -73,8 +66,9 @@ export function Pill({
 }) {
   const t = useTheme();
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={onPress}
+      scaleTo={0.93}
       style={[
         ui.pill,
         { backgroundColor: active ? t.primary : t.surface2, borderColor: active ? t.primary : t.border },
@@ -92,7 +86,7 @@ export function Pill({
       >
         {label}
       </Text>
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 

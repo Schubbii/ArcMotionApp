@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme/ThemeContext";
 import { Glass } from "./Glass";
+import { PressableScale } from "./motion";
 import { DumbbellIcon, HistoryIcon, ChartIcon, SettingsIcon, BookIcon } from "./Icons";
 
 export type Tab = "workout" | "library" | "history" | "progress" | "settings";
@@ -39,11 +40,11 @@ export function BottomNav({ active, onChange }: Props) {
             const on = active === id;
             const color = on ? t.primary : t.textMuted;
             return (
-              <TouchableOpacity
+              <PressableScale
                 key={id}
                 style={styles.item}
+                scaleTo={0.88}
                 onPress={() => onChange(id)}
-                activeOpacity={0.7}
               >
                 <View
                   style={[
@@ -54,7 +55,7 @@ export function BottomNav({ active, onChange }: Props) {
                   <Icon size={22} color={color} />
                 </View>
                 <Text style={[styles.label, { color }]}>{label}</Text>
-              </TouchableOpacity>
+              </PressableScale>
             );
           })}
         </View>

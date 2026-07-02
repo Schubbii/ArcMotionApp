@@ -7,6 +7,7 @@ import { ThemeContext } from "./src/theme/ThemeContext";
 import { paletteFor } from "./src/theme/themes";
 import { BottomNav, type Tab } from "./src/components/BottomNav";
 import { GlassBackdrop } from "./src/components/GlassBackdrop";
+import { FadeSlideIn } from "./src/components/motion";
 import { WorkoutHomeScreen } from "./src/screens/WorkoutHomeScreen";
 import { LibraryScreen } from "./src/screens/LibraryScreen";
 import { ActiveWorkoutScreen } from "./src/screens/ActiveWorkoutScreen";
@@ -82,19 +83,33 @@ function Router() {
     return () => sub.remove();
   }, [tab, route]);
 
+  // Keyed FadeSlideIn remounts on every navigation, giving each screen a soft
+  // fade + slide-up entrance.
   if (route.name === "active") {
-    return <ActiveWorkoutScreen onClose={() => setRoute({ name: "tabs" })} />;
+    return (
+      <FadeSlideIn key="active">
+        <ActiveWorkoutScreen onClose={() => setRoute({ name: "tabs" })} />
+      </FadeSlideIn>
+    );
   }
   if (route.name === "newRoutine") {
-    return <NewRoutineScreen onClose={() => setRoute({ name: "tabs" })} />;
+    return (
+      <FadeSlideIn key="newRoutine">
+        <NewRoutineScreen onClose={() => setRoute({ name: "tabs" })} />
+      </FadeSlideIn>
+    );
   }
   if (route.name === "exercise") {
-    return <ExerciseDetailScreen exerciseId={route.id} onClose={() => setRoute({ name: "tabs" })} />;
+    return (
+      <FadeSlideIn key={`exercise-${route.id}`}>
+        <ExerciseDetailScreen exerciseId={route.id} onClose={() => setRoute({ name: "tabs" })} />
+      </FadeSlideIn>
+    );
   }
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
+      <FadeSlideIn key={tab} style={{ flex: 1 }}>
         {tab === "workout" && (
           <WorkoutHomeScreen
             onOpenActive={() => setRoute({ name: "active" })}
@@ -107,7 +122,7 @@ function Router() {
           <ProgressScreen onOpenExercise={(id) => setRoute({ name: "exercise", id })} />
         )}
         {tab === "settings" && <SettingsScreen />}
-      </View>
+      </FadeSlideIn>
       <BottomNav active={tab} onChange={setTab} />
     </View>
   );

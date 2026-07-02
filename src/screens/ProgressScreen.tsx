@@ -5,6 +5,7 @@ import { useTheme } from "../theme/ThemeContext";
 import { NAV_CLEARANCE } from "../components/BottomNav";
 import { Card, Empty, ScreenTitle, SectionTitle } from "../components/ui";
 import { Glass } from "../components/Glass";
+import { PressableScale } from "../components/motion";
 import { ChevronRight, TrophyIcon } from "../components/Icons";
 import { LineChart, type ChartPoint } from "../components/LineChart";
 import { personalRecord, workoutVolume, workoutSetCount } from "../lib/stats";
@@ -85,7 +86,7 @@ export function ProgressScreen({ onOpenExercise }: Props) {
 
             <SectionTitle>Exercises</SectionTitle>
             {trained.map(({ id, sessions, pr }) => (
-              <TouchableOpacity key={id} activeOpacity={0.7} onPress={() => onOpenExercise(id)}>
+              <PressableScale key={id} scaleTo={0.97} onPress={() => onOpenExercise(id)}>
                 <Card style={{ ...styles.exCard }}>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.exName, { color: t.text }]} numberOfLines={1}>
@@ -105,7 +106,7 @@ export function ProgressScreen({ onOpenExercise }: Props) {
                   )}
                   <ChevronRight color={t.textFaint} />
                 </Card>
-              </TouchableOpacity>
+              </PressableScale>
             ))}
           </>
         )}

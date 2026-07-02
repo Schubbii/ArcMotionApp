@@ -15,6 +15,7 @@ import { useTheme } from "../theme/ThemeContext";
 import type { Equipment, Exercise, MuscleGroup } from "../types";
 import { CloseIcon, PlusIcon, SearchIcon } from "./Icons";
 import { Pill } from "./ui";
+import { PressableScale } from "./motion";
 
 const GROUPS: MuscleGroup[] = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Core", "Cardio", "Full Body"];
 const EQUIPMENT: Equipment[] = ["Barbell", "Dumbbell", "Machine", "Cable", "Bodyweight", "Kettlebell", "Other"];
@@ -130,8 +131,8 @@ export function AddExerciseModal({ visible, onClose, onPick, selectedIds = [], m
 function ExerciseRow({ ex, selected, onPress }: { ex: Exercise; selected: boolean; onPress: () => void }) {
   const t = useTheme();
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
+    <PressableScale
+      scaleTo={0.97}
       onPress={onPress}
       style={[
         styles.row,
@@ -148,7 +149,7 @@ function ExerciseRow({ ex, selected, onPress }: { ex: Exercise; selected: boolea
         </Text>
       </View>
       {selected && <Text style={{ color: t.primary, fontWeight: "900", fontSize: 18 }}>✓</Text>}
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 

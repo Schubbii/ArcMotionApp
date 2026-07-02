@@ -3,6 +3,7 @@ import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
 import { NAV_CLEARANCE } from "../components/BottomNav";
 import { Card, PrimaryButton, SectionTitle } from "../components/ui";
+import { PressableScale } from "../components/motion";
 import { ArcLogo } from "../components/ArcLogo";
 import { PlusIcon, ChevronRight, ClockIcon, FlameIcon, TrashIcon } from "../components/Icons";
 import { formatDuration, greeting } from "../lib/format";
@@ -58,7 +59,7 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
       </View>
 
       {active && (
-        <TouchableOpacity activeOpacity={0.9} onPress={onOpenActive}>
+        <PressableScale scaleTo={0.97} onPress={onOpenActive}>
           <Card style={{ ...styles.resume, borderColor: t.primary }}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.resumeLabel, { color: t.primary }]}>WORKOUT IN PROGRESS</Text>
@@ -69,7 +70,7 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
             </View>
             <ChevronRight color={t.primary} />
           </Card>
-        </TouchableOpacity>
+        </PressableScale>
       )}
 
       <SectionTitle>Quick Start</SectionTitle>

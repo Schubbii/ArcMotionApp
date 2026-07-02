@@ -4,6 +4,7 @@ import { useTheme } from "../theme/ThemeContext";
 import { NAV_CLEARANCE } from "../components/BottomNav";
 import { THEMES } from "../theme/themes";
 import { Card, ScreenTitle, SectionTitle } from "../components/ui";
+import { PressableScale } from "../components/motion";
 import { CheckIcon } from "../components/Icons";
 
 export function SettingsScreen() {
@@ -37,9 +38,9 @@ export function SettingsScreen() {
         {THEMES.map((th) => {
           const active = settings.theme === th.id;
           return (
-            <TouchableOpacity
+            <PressableScale
               key={th.id}
-              activeOpacity={0.85}
+              scaleTo={0.97}
               onPress={() => setTheme(th.id)}
               style={[styles.themeCard, { backgroundColor: t.glassSurface, borderColor: active ? t.primary : t.glassBorder }]}
             >
@@ -57,7 +58,7 @@ export function SettingsScreen() {
                   <CheckIcon size={14} color={t.onPrimary} />
                 </View>
               )}
-            </TouchableOpacity>
+            </PressableScale>
           );
         })}
 

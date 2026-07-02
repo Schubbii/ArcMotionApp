@@ -5,6 +5,7 @@ import { useTheme } from "../theme/ThemeContext";
 import { NAV_CLEARANCE } from "../components/BottomNav";
 import { PROGRAMS, PROGRAM_GOALS, type Program, type ProgramGoal } from "../data/programs";
 import { Card, Pill, ScreenTitle } from "../components/ui";
+import { PressableScale } from "../components/motion";
 import { CheckIcon, PlusIcon } from "../components/Icons";
 
 interface Props {
@@ -112,24 +113,22 @@ function ProgramCard({
       </Text>
 
       <View style={styles.btnRow}>
-        <TouchableOpacity
+        <PressableScale
           style={[styles.btn, { backgroundColor: t.primary }]}
           onPress={onStart}
-          activeOpacity={0.85}
         >
           <Text style={{ color: t.onPrimary, fontWeight: "800", fontSize: 14 }}>Start Workout</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </PressableScale>
+        <PressableScale
           style={[styles.btn, { backgroundColor: t.surface2, opacity: saved ? 0.7 : 1 }]}
           onPress={onSave}
           disabled={saved}
-          activeOpacity={0.85}
         >
           {saved ? <CheckIcon size={15} color={t.success} /> : <PlusIcon size={16} color={t.text} />}
           <Text style={{ color: saved ? t.success : t.text, fontWeight: "800", fontSize: 14 }}>
             {saved ? "Saved" : "Save Routine"}
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
     </Card>
   );
