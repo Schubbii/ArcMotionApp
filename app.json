@@ -12,7 +12,9 @@
       "backgroundColor": "#ffffff",
       "resizeMode": "contain"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.arcmotion.app",
@@ -29,6 +31,12 @@
     "web": {
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c9e9ac90-9ec4-48a4-b7b3-c0efbeaef836"
+      }
+    },
+    "owner": "schubbii"
   }
 }
