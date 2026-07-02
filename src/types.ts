@@ -62,7 +62,17 @@ export interface Routine {
   exerciseIds: string[];
 }
 
-export type ThemeId = "volt" | "ocean" | "carbon" | "matcha";
+export type ThemeId =
+  | "volt"
+  | "ocean"
+  | "carbon"
+  | "matcha"
+  | "crimson"
+  | "bluelock"
+  | "shadow"
+  | "sunset"
+  | "mocha"
+  | "aurora";
 
 export type WeightUnit = "kg" | "lb";
 
