@@ -2,9 +2,9 @@ import type { ReactElement } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme/ThemeContext";
-import { DumbbellIcon, HistoryIcon, ChartIcon, SettingsIcon } from "./Icons";
+import { DumbbellIcon, HistoryIcon, ChartIcon, SettingsIcon, BookIcon } from "./Icons";
 
-export type Tab = "workout" | "history" | "progress" | "settings";
+export type Tab = "workout" | "library" | "history" | "progress" | "settings";
 
 interface Props {
   active: Tab;
@@ -13,6 +13,7 @@ interface Props {
 
 const ITEMS: { id: Tab; label: string; Icon: (p: { size?: number; color?: string }) => ReactElement }[] = [
   { id: "workout", label: "Workout", Icon: DumbbellIcon },
+  { id: "library", label: "Library", Icon: BookIcon },
   { id: "history", label: "History", Icon: HistoryIcon },
   { id: "progress", label: "Progress", Icon: ChartIcon },
   { id: "settings", label: "Settings", Icon: SettingsIcon },
@@ -25,7 +26,7 @@ export function BottomNav({ active, onChange }: Props) {
     <View
       style={[
         styles.nav,
-        { backgroundColor: t.surface, borderTopColor: t.border, paddingBottom: Math.max(insets.bottom, 10) },
+        { backgroundColor: t.glassSurface, borderTopColor: t.glassBorder, paddingBottom: Math.max(insets.bottom, 10) },
       ]}
     >
       {ITEMS.map(({ id, label, Icon }) => {

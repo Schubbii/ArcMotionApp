@@ -69,7 +69,7 @@ export function ProgressScreen({ onOpenExercise }: Props) {
           <>
             <View style={styles.tiles}>
               {tiles.map((tile) => (
-                <View key={tile.label} style={[styles.tile, { backgroundColor: t.surface, borderColor: t.border }]}>
+                <View key={tile.label} style={[styles.tile, { backgroundColor: t.glassSurface, borderColor: t.glassBorder }]}>
                   <Text style={[styles.tileVal, { color: t.text }]}>{tile.value}</Text>
                   <Text style={[styles.tileLbl, { color: t.textMuted }]}>{tile.label}</Text>
                 </View>

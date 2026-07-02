@@ -5,7 +5,7 @@ import { useTheme } from "../theme/ThemeContext";
 export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   const t = useTheme();
   return (
-    <View style={[ui.card, { backgroundColor: t.surface, borderColor: t.border }, style]}>
+    <View style={[ui.card, { backgroundColor: t.glassSurface, borderColor: t.glassBorder }, style]}>
       {children}
     </View>
   );

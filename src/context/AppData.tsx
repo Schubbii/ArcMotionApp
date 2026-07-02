@@ -41,6 +41,9 @@ interface AppDataValue {
   // workout session
   startEmptyWorkout: () => void;
   startRoutine: (routineId: string) => void;
+  /** Start a session with a given title and exercise list (used by the Library). */
+  startWorkoutWith: (title: string, exerciseIds: string[]) => void;
+  deleteWorkout: (id: string) => void;
   discardActive: () => void;
   finishActive: () => void;
   setActiveTitle: (title: string) => void;
@@ -88,7 +91,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         loadJSON<Workout | null>(STORAGE_KEYS.active, null),
         loadJSON(STORAGE_KEYS.settings, DEFAULT_SETTINGS),
       ]);
-      setExercises(ex);
+      // Merge new default exercises into stored lists so existing installs
+      // gain library additions without losing user-created exercises.
+      const have = new Set(ex.map((e) => e.id));
+      const missing = DEFAULT_EXERCISES.filter((d) => !have.has(d.id));
+      setExercises(missing.length ? [...ex, ...missing] : ex);
       setRoutines(ro);
       setWorkouts(wo);
       setActive(ac);
@@ -176,6 +183,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           entries: (routine?.exerciseIds ?? []).map(buildEntry),
         });
       },
+      startWorkoutWith: (title, exerciseIds) =>
+        setActive({
+          id: uid(),
+          title,
+          date: todayISO(),
+          startTs: Date.now(),
+          entries: exerciseIds.map(buildEntry),
+        }),
+      deleteWorkout: (id) => setWorkouts((prev) => prev.filter((w) => w.id !== id)),
       discardActive: () => setActive(null),
       finishActive: () =>
         setActive((cur) => {

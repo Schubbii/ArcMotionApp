@@ -4,6 +4,10 @@ import type { ThemeId } from "../types";
  * A theme is a flat palette of design tokens. Components read colors from the
  * active palette via useTheme() instead of hard-coding hex values, so switching
  * a theme instantly recolors the whole app.
+ *
+ * The "glass" tokens power the liquid-glass look: soft gradient blobs are drawn
+ * behind every screen (GlassBackdrop) and cards use a translucent surface with
+ * a light border, so the color bleeds through like frosted glass.
  */
 export interface Palette {
   /** True for dark themes — drives the status bar / contrast choices. */
@@ -24,6 +28,15 @@ export interface Palette {
   trophy: string;
   /** Background tint for a completed set row (Hevy-style highlight). */
   rowDone: string;
+  /** Translucent card surface for the frosted-glass look. */
+  glassSurface: string;
+  /** Light hairline border that sells the glass edge. */
+  glassBorder: string;
+  /** Colors of the two soft gradient blobs behind each screen. */
+  blobA: string;
+  blobB: string;
+  /** Peak opacity of the blobs (kept subtle on purpose). */
+  blobOpacity: number;
 }
 
 export interface ThemeDef {
@@ -58,6 +71,11 @@ export const THEMES: ThemeDef[] = [
       danger: "#ff6b6b",
       trophy: "#ffc857",
       rowDone: "#1c2b16",
+      glassSurface: "rgba(255,255,255,0.055)",
+      glassBorder: "rgba(255,255,255,0.10)",
+      blobA: "#c6f432",
+      blobB: "#7cdfee",
+      blobOpacity: 0.14,
     },
   },
   {
@@ -67,21 +85,26 @@ export const THEMES: ThemeDef[] = [
     swatches: ["#2563eb", "#3b82f6", "#eef2fb", "#0f172a"],
     palette: {
       dark: false,
-      bg: "#f4f6fb",
+      bg: "#eef2f9",
       surface: "#ffffff",
-      surface2: "#eef2fb",
+      surface2: "#e7edf8",
       text: "#0f172a",
       textMuted: "#64748b",
       textFaint: "#94a3b8",
-      border: "#e7ecf5",
+      border: "#dfe6f2",
       primary: "#2563eb",
-      primarySoft: "#e8eeff",
+      primarySoft: "#dce7ff",
       onPrimary: "#ffffff",
       accent: "#0ea5e9",
       success: "#16a34a",
       danger: "#ef4444",
       trophy: "#f59e0b",
-      rowDone: "#e7f7ee",
+      rowDone: "#ddf3e6",
+      glassSurface: "rgba(255,255,255,0.66)",
+      glassBorder: "rgba(255,255,255,0.95)",
+      blobA: "#2563eb",
+      blobB: "#22d3ee",
+      blobOpacity: 0.12,
     },
   },
   {
@@ -106,6 +129,11 @@ export const THEMES: ThemeDef[] = [
       danger: "#fb7185",
       trophy: "#fbbf24",
       rowDone: "#16233f",
+      glassSurface: "rgba(255,255,255,0.05)",
+      glassBorder: "rgba(255,255,255,0.09)",
+      blobA: "#6d8bff",
+      blobB: "#a78bfa",
+      blobOpacity: 0.13,
     },
   },
   {
@@ -130,6 +158,11 @@ export const THEMES: ThemeDef[] = [
       danger: "#c66f80",
       trophy: "#c66f80",
       rowDone: "#eef3e2",
+      glassSurface: "rgba(255,255,255,0.68)",
+      glassBorder: "rgba(255,255,255,0.95)",
+      blobA: "#9faa74",
+      blobB: "#c66f80",
+      blobOpacity: 0.22,
     },
   },
 ];

@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
 import { Card, PrimaryButton, SectionTitle } from "../components/ui";
@@ -17,7 +17,27 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
   const { active, routines, workouts, settings, exerciseById, startEmptyWorkout, startRoutine, deleteRoutine } =
     useAppData();
 
+  // Never silently overwrite a running session — offer to resume it instead.
   const start = (fn: () => void) => {
+    if (active) {
+      Alert.alert(
+        "Workout in progress",
+        "You already have a workout running. Starting a new one will replace it.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Resume Current", onPress: onOpenActive },
+          {
+            text: "Start New",
+            style: "destructive",
+            onPress: () => {
+              fn();
+              onOpenActive();
+            },
+          },
+        ]
+      );
+      return;
+    }
     fn();
     onOpenActive();
   };
@@ -81,7 +101,15 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
             <Card key={r.id} style={{ marginBottom: 12 }}>
               <View style={styles.routineTop}>
                 <Text style={[styles.routineTitle, { color: t.text }]}>{r.name}</Text>
-                <TouchableOpacity onPress={() => deleteRoutine(r.id)} hitSlop={8}>
+                <TouchableOpacity
+                  onPress={() =>
+                    Alert.alert("Delete routine?", `"${r.name}" will be removed.`, [
+                      { text: "Cancel", style: "cancel" },
+                      { text: "Delete", style: "destructive", onPress: () => deleteRoutine(r.id) },
+                    ])
+                  }
+                  hitSlop={8}
+                >
                   <TrashIcon size={17} color={t.textFaint} />
                 </TouchableOpacity>
               </View>

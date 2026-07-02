@@ -17,8 +17,15 @@ It blends three influences:
   (`W`), long-press to delete. Live session timer + running volume & set count.
 - **Routines** — create reusable routines from the exercise library and start
   them in one tap.
-- **Exercise library** — 35+ seeded exercises with muscle group & equipment;
+- **Workout Library** — 15 prebuilt plans across six goals (Beginner, Strength,
+  Muscle, Fat Loss, Home, Athletic), each with guidance; start instantly or save
+  as a routine.
+- **Exercise library** — 115+ seeded exercises with muscle group & equipment;
   search, filter by muscle, or create your own.
+- **Liquid-glass design** — soft theme-tinted gradient blobs behind every screen
+  with translucent frosted cards; subtle, fast, and consistent across themes.
+- **Personal onboarding** — name capture on first launch and a time-of-day
+  greeting; instructions live in Settings → How It Works.
 - **History** — every finished workout as a summary card (duration, volume, sets,
   top set per exercise).
 - **Progress** — overall stats, weekly-volume trend, and per-exercise analysis

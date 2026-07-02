@@ -1,52 +1,157 @@
 import type { Exercise } from "../types";
 
-/** Seed exercise library, loaded on first launch. Users can add their own. */
+/**
+ * Seed exercise library, loaded on first launch and merged into existing
+ * installs (new defaults are appended without touching user-created entries).
+ * Users can add their own on top.
+ */
 export const DEFAULT_EXERCISES: Exercise[] = [
-  // Chest
+  // ------------------------------ Chest ------------------------------
   { id: "bench-bb", name: "Bench Press (Barbell)", group: "Chest", equipment: "Barbell", weighted: true },
   { id: "bench-db", name: "Bench Press (Dumbbell)", group: "Chest", equipment: "Dumbbell", weighted: true },
   { id: "incline-bb", name: "Incline Bench Press (Barbell)", group: "Chest", equipment: "Barbell", weighted: true },
   { id: "incline-db", name: "Incline Press (Dumbbell)", group: "Chest", equipment: "Dumbbell", weighted: true },
+  { id: "decline-bb", name: "Decline Bench Press (Barbell)", group: "Chest", equipment: "Barbell", weighted: true },
+  { id: "smith-bench", name: "Bench Press (Smith Machine)", group: "Chest", equipment: "Machine", weighted: true },
   { id: "chest-press-machine", name: "Chest Press (Machine)", group: "Chest", equipment: "Machine", weighted: true },
+  { id: "incline-press-machine", name: "Incline Press (Machine)", group: "Chest", equipment: "Machine", weighted: true },
   { id: "cable-fly", name: "Cable Fly", group: "Chest", equipment: "Cable", weighted: true },
+  { id: "low-cable-fly", name: "Low-to-High Cable Fly", group: "Chest", equipment: "Cable", weighted: true },
   { id: "pec-deck", name: "Pec Deck", group: "Chest", equipment: "Machine", weighted: true },
+  { id: "db-fly", name: "Dumbbell Fly", group: "Chest", equipment: "Dumbbell", weighted: true },
   { id: "pushup", name: "Push Up", group: "Chest", equipment: "Bodyweight", weighted: false },
-  // Back
+  { id: "wide-pushup", name: "Wide Push Up", group: "Chest", equipment: "Bodyweight", weighted: false },
+  { id: "chest-dip", name: "Chest Dip", group: "Chest", equipment: "Bodyweight", weighted: false },
+
+  // ------------------------------ Back -------------------------------
   { id: "deadlift", name: "Deadlift (Barbell)", group: "Back", equipment: "Barbell", weighted: true },
+  { id: "sumo-deadlift", name: "Sumo Deadlift (Barbell)", group: "Back", equipment: "Barbell", weighted: true },
+  { id: "rack-pull", name: "Rack Pull (Barbell)", group: "Back", equipment: "Barbell", weighted: true },
   { id: "row-bb", name: "Bent Over Row (Barbell)", group: "Back", equipment: "Barbell", weighted: true },
+  { id: "pendlay-row", name: "Pendlay Row (Barbell)", group: "Back", equipment: "Barbell", weighted: true },
+  { id: "t-bar-row", name: "T-Bar Row", group: "Back", equipment: "Barbell", weighted: true },
   { id: "row-db", name: "Row (Dumbbell)", group: "Back", equipment: "Dumbbell", weighted: true },
-  { id: "lat-pulldown", name: "Lat Pulldown (Cable)", group: "Back", equipment: "Cable", weighted: true },
+  { id: "chest-supported-row", name: "Chest Supported Row (Machine)", group: "Back", equipment: "Machine", weighted: true },
   { id: "seated-row", name: "Seated Cable Row", group: "Back", equipment: "Cable", weighted: true },
+  { id: "lat-pulldown", name: "Lat Pulldown (Cable)", group: "Back", equipment: "Cable", weighted: true },
+  { id: "close-grip-pulldown", name: "Close Grip Pulldown (Cable)", group: "Back", equipment: "Cable", weighted: true },
+  { id: "straight-arm-pulldown", name: "Straight Arm Pulldown (Cable)", group: "Back", equipment: "Cable", weighted: true },
   { id: "pullup", name: "Pull Up", group: "Back", equipment: "Bodyweight", weighted: false },
-  // Legs
+  { id: "chinup", name: "Chin Up", group: "Back", equipment: "Bodyweight", weighted: false },
+  { id: "pullover", name: "Dumbbell Pullover", group: "Back", equipment: "Dumbbell", weighted: true },
+  { id: "shrug-bb", name: "Shrug (Barbell)", group: "Back", equipment: "Barbell", weighted: true },
+  { id: "shrug-db", name: "Shrug (Dumbbell)", group: "Back", equipment: "Dumbbell", weighted: true },
+  { id: "back-extension", name: "Back Extension", group: "Back", equipment: "Bodyweight", weighted: false },
+  { id: "good-morning", name: "Good Morning (Barbell)", group: "Back", equipment: "Barbell", weighted: true },
+
+  // ------------------------------ Legs -------------------------------
   { id: "squat-bb", name: "Squat (Barbell)", group: "Legs", equipment: "Barbell", weighted: true },
   { id: "front-squat", name: "Front Squat (Barbell)", group: "Legs", equipment: "Barbell", weighted: true },
+  { id: "smith-squat", name: "Squat (Smith Machine)", group: "Legs", equipment: "Machine", weighted: true },
+  { id: "hack-squat", name: "Hack Squat (Machine)", group: "Legs", equipment: "Machine", weighted: true },
+  { id: "goblet-squat", name: "Goblet Squat (Dumbbell)", group: "Legs", equipment: "Dumbbell", weighted: true },
+  { id: "air-squat", name: "Air Squat", group: "Legs", equipment: "Bodyweight", weighted: false },
   { id: "leg-press", name: "Leg Press (Machine)", group: "Legs", equipment: "Machine", weighted: true },
+  { id: "bulgarian-split", name: "Bulgarian Split Squat (Dumbbell)", group: "Legs", equipment: "Dumbbell", weighted: true },
+  { id: "lunge", name: "Walking Lunge (Dumbbell)", group: "Legs", equipment: "Dumbbell", weighted: true },
+  { id: "air-lunge", name: "Lunge (Bodyweight)", group: "Legs", equipment: "Bodyweight", weighted: false },
+  { id: "step-up", name: "Step Up (Dumbbell)", group: "Legs", equipment: "Dumbbell", weighted: true },
   { id: "leg-ext", name: "Leg Extension (Machine)", group: "Legs", equipment: "Machine", weighted: true },
   { id: "leg-curl", name: "Leg Curl (Machine)", group: "Legs", equipment: "Machine", weighted: true },
+  { id: "seated-leg-curl", name: "Seated Leg Curl (Machine)", group: "Legs", equipment: "Machine", weighted: true },
   { id: "rdl", name: "Romanian Deadlift (Barbell)", group: "Legs", equipment: "Barbell", weighted: true },
-  { id: "calf-raise", name: "Calf Raise", group: "Legs", equipment: "Machine", weighted: true },
-  { id: "lunge", name: "Walking Lunge (Dumbbell)", group: "Legs", equipment: "Dumbbell", weighted: true },
-  // Shoulders
+  { id: "rdl-db", name: "Romanian Deadlift (Dumbbell)", group: "Legs", equipment: "Dumbbell", weighted: true },
+  { id: "hip-thrust", name: "Hip Thrust (Barbell)", group: "Legs", equipment: "Barbell", weighted: true },
+  { id: "glute-bridge", name: "Glute Bridge", group: "Legs", equipment: "Bodyweight", weighted: false },
+  { id: "calf-raise", name: "Standing Calf Raise (Machine)", group: "Legs", equipment: "Machine", weighted: true },
+  { id: "seated-calf", name: "Seated Calf Raise (Machine)", group: "Legs", equipment: "Machine", weighted: true },
+  { id: "single-leg-calf", name: "Single Leg Calf Raise (Dumbbell)", group: "Legs", equipment: "Dumbbell", weighted: true },
+  { id: "adductor", name: "Hip Adduction (Machine)", group: "Legs", equipment: "Machine", weighted: true },
+  { id: "abductor", name: "Hip Abduction (Machine)", group: "Legs", equipment: "Machine", weighted: true },
+  { id: "nordic-curl", name: "Nordic Hamstring Curl", group: "Legs", equipment: "Bodyweight", weighted: false },
+  { id: "pistol-squat", name: "Pistol Squat", group: "Legs", equipment: "Bodyweight", weighted: false },
+  { id: "wall-sit", name: "Wall Sit", group: "Legs", equipment: "Bodyweight", weighted: false },
+  { id: "box-jump", name: "Box Jump", group: "Legs", equipment: "Bodyweight", weighted: false },
+
+  // ---------------------------- Shoulders ----------------------------
   { id: "ohp", name: "Overhead Press (Barbell)", group: "Shoulders", equipment: "Barbell", weighted: true },
+  { id: "push-press", name: "Push Press (Barbell)", group: "Shoulders", equipment: "Barbell", weighted: true },
+  { id: "db-shoulder-press", name: "Shoulder Press (Dumbbell)", group: "Shoulders", equipment: "Dumbbell", weighted: true },
   { id: "arnold", name: "Arnold Press (Dumbbell)", group: "Shoulders", equipment: "Dumbbell", weighted: true },
+  { id: "machine-shoulder-press", name: "Shoulder Press (Machine)", group: "Shoulders", equipment: "Machine", weighted: true },
+  { id: "landmine-press", name: "Landmine Press (Barbell)", group: "Shoulders", equipment: "Barbell", weighted: true },
   { id: "lateral-raise", name: "Lateral Raise (Dumbbell)", group: "Shoulders", equipment: "Dumbbell", weighted: true },
+  { id: "cable-lateral", name: "Lateral Raise (Cable)", group: "Shoulders", equipment: "Cable", weighted: true },
+  { id: "front-raise", name: "Front Raise (Dumbbell)", group: "Shoulders", equipment: "Dumbbell", weighted: true },
+  { id: "upright-row", name: "Upright Row (Barbell)", group: "Shoulders", equipment: "Barbell", weighted: true },
   { id: "face-pull", name: "Face Pull (Cable)", group: "Shoulders", equipment: "Cable", weighted: true },
-  { id: "rear-delt", name: "Rear Delt Fly", group: "Shoulders", equipment: "Machine", weighted: true },
-  // Arms
+  { id: "rear-delt", name: "Rear Delt Fly (Machine)", group: "Shoulders", equipment: "Machine", weighted: true },
+  { id: "rear-delt-db", name: "Rear Delt Fly (Dumbbell)", group: "Shoulders", equipment: "Dumbbell", weighted: true },
+
+  // ------------------------------ Arms -------------------------------
   { id: "curl-bb", name: "Barbell Curl", group: "Arms", equipment: "Barbell", weighted: true },
+  { id: "ez-curl", name: "EZ Bar Curl", group: "Arms", equipment: "Barbell", weighted: true },
   { id: "curl-db", name: "Dumbbell Curl", group: "Arms", equipment: "Dumbbell", weighted: true },
   { id: "hammer-curl", name: "Hammer Curl (Dumbbell)", group: "Arms", equipment: "Dumbbell", weighted: true },
+  { id: "incline-curl", name: "Incline Curl (Dumbbell)", group: "Arms", equipment: "Dumbbell", weighted: true },
+  { id: "preacher-curl", name: "Preacher Curl (EZ Bar)", group: "Arms", equipment: "Barbell", weighted: true },
+  { id: "concentration-curl", name: "Concentration Curl (Dumbbell)", group: "Arms", equipment: "Dumbbell", weighted: true },
+  { id: "cable-curl", name: "Cable Curl", group: "Arms", equipment: "Cable", weighted: true },
+  { id: "reverse-curl", name: "Reverse Curl (Barbell)", group: "Arms", equipment: "Barbell", weighted: true },
+  { id: "wrist-curl", name: "Wrist Curl (Barbell)", group: "Arms", equipment: "Barbell", weighted: true },
   { id: "tricep-pushdown", name: "Triceps Pushdown (Cable)", group: "Arms", equipment: "Cable", weighted: true },
+  { id: "rope-pushdown", name: "Rope Pushdown (Cable)", group: "Arms", equipment: "Cable", weighted: true },
+  { id: "overhead-tricep", name: "Overhead Triceps Extension (Cable)", group: "Arms", equipment: "Cable", weighted: true },
+  { id: "overhead-tricep-db", name: "Overhead Triceps Extension (Dumbbell)", group: "Arms", equipment: "Dumbbell", weighted: true },
   { id: "skullcrusher", name: "Skullcrusher (Barbell)", group: "Arms", equipment: "Barbell", weighted: true },
+  { id: "close-grip-bench", name: "Close Grip Bench Press (Barbell)", group: "Arms", equipment: "Barbell", weighted: true },
+  { id: "kickback", name: "Triceps Kickback (Dumbbell)", group: "Arms", equipment: "Dumbbell", weighted: true },
   { id: "dip", name: "Triceps Dip", group: "Arms", equipment: "Bodyweight", weighted: false },
-  // Core
+  { id: "diamond-pushup", name: "Diamond Push Up", group: "Arms", equipment: "Bodyweight", weighted: false },
+
+  // ------------------------------ Core -------------------------------
   { id: "plank", name: "Plank", group: "Core", equipment: "Bodyweight", weighted: false },
-  { id: "cable-crunch", name: "Cable Crunch", group: "Core", equipment: "Cable", weighted: true },
+  { id: "side-plank", name: "Side Plank", group: "Core", equipment: "Bodyweight", weighted: false },
+  { id: "crunch", name: "Crunch", group: "Core", equipment: "Bodyweight", weighted: false },
+  { id: "bicycle-crunch", name: "Bicycle Crunch", group: "Core", equipment: "Bodyweight", weighted: false },
+  { id: "situp", name: "Sit Up", group: "Core", equipment: "Bodyweight", weighted: false },
+  { id: "decline-situp", name: "Decline Sit Up", group: "Core", equipment: "Bodyweight", weighted: false },
+  { id: "russian-twist", name: "Russian Twist", group: "Core", equipment: "Bodyweight", weighted: false },
+  { id: "leg-raise", name: "Lying Leg Raise", group: "Core", equipment: "Bodyweight", weighted: false },
   { id: "hanging-leg-raise", name: "Hanging Leg Raise", group: "Core", equipment: "Bodyweight", weighted: false },
-  // Cardio
+  { id: "hanging-knee-raise", name: "Hanging Knee Raise", group: "Core", equipment: "Bodyweight", weighted: false },
+  { id: "cable-crunch", name: "Cable Crunch", group: "Core", equipment: "Cable", weighted: true },
+  { id: "machine-crunch", name: "Ab Crunch (Machine)", group: "Core", equipment: "Machine", weighted: true },
+  { id: "ab-wheel", name: "Ab Wheel Rollout", group: "Core", equipment: "Other", weighted: false },
+  { id: "dead-bug", name: "Dead Bug", group: "Core", equipment: "Bodyweight", weighted: false },
+  { id: "mountain-climbers", name: "Mountain Climbers", group: "Core", equipment: "Bodyweight", weighted: false },
+  { id: "v-up", name: "V-Up", group: "Core", equipment: "Bodyweight", weighted: false },
+
+  // ----------------------------- Cardio ------------------------------
   { id: "treadmill", name: "Treadmill", group: "Cardio", equipment: "Machine", weighted: false },
+  { id: "incline-walk", name: "Incline Walk", group: "Cardio", equipment: "Machine", weighted: false },
+  { id: "running", name: "Outdoor Run", group: "Cardio", equipment: "Other", weighted: false },
+  { id: "bike", name: "Stationary Bike", group: "Cardio", equipment: "Machine", weighted: false },
+  { id: "elliptical", name: "Elliptical", group: "Cardio", equipment: "Machine", weighted: false },
+  { id: "stairmaster", name: "Stair Climber", group: "Cardio", equipment: "Machine", weighted: false },
   { id: "row-erg", name: "Rowing Machine", group: "Cardio", equipment: "Machine", weighted: false },
+  { id: "jump-rope", name: "Jump Rope", group: "Cardio", equipment: "Other", weighted: false },
+  { id: "sprints", name: "Sprints", group: "Cardio", equipment: "Other", weighted: false },
+  { id: "swimming", name: "Swimming", group: "Cardio", equipment: "Other", weighted: false },
+
+  // ---------------------------- Full Body ----------------------------
+  { id: "power-clean", name: "Power Clean (Barbell)", group: "Full Body", equipment: "Barbell", weighted: true },
+  { id: "clean-jerk", name: "Clean & Jerk (Barbell)", group: "Full Body", equipment: "Barbell", weighted: true },
+  { id: "snatch", name: "Snatch (Barbell)", group: "Full Body", equipment: "Barbell", weighted: true },
+  { id: "thruster", name: "Thruster (Barbell)", group: "Full Body", equipment: "Barbell", weighted: true },
+  { id: "kb-swing", name: "Kettlebell Swing", group: "Full Body", equipment: "Kettlebell", weighted: true },
+  { id: "turkish-getup", name: "Turkish Get Up (Kettlebell)", group: "Full Body", equipment: "Kettlebell", weighted: true },
+  { id: "farmers-carry", name: "Farmer's Carry (Dumbbell)", group: "Full Body", equipment: "Dumbbell", weighted: true },
+  { id: "sled-push", name: "Sled Push", group: "Full Body", equipment: "Other", weighted: true },
+  { id: "battle-ropes", name: "Battle Ropes", group: "Full Body", equipment: "Other", weighted: false },
+  { id: "burpee", name: "Burpee", group: "Full Body", equipment: "Bodyweight", weighted: false },
+  { id: "med-ball-slam", name: "Medicine Ball Slam", group: "Full Body", equipment: "Other", weighted: true },
+  { id: "bear-crawl", name: "Bear Crawl", group: "Full Body", equipment: "Bodyweight", weighted: false },
 ];
 
 /** A couple of starter routines so the home screen isn't empty on first run. */

@@ -148,6 +148,18 @@ export function ClockIcon(p: IconProps) {
   );
 }
 
+export function BookIcon(p: IconProps) {
+  return (
+    <Base {...p}>
+      <Path {...s} d="M12 7v14" />
+      <Path
+        {...s}
+        d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"
+      />
+    </Base>
+  );
+}
+
 export function FlameIcon(p: IconProps) {
   return (
     <Base size={18} {...p}>

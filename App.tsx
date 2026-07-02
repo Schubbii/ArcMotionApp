@@ -6,7 +6,9 @@ import { AppDataProvider, useAppData } from "./src/context/AppData";
 import { ThemeContext } from "./src/theme/ThemeContext";
 import { paletteFor } from "./src/theme/themes";
 import { BottomNav, type Tab } from "./src/components/BottomNav";
+import { GlassBackdrop } from "./src/components/GlassBackdrop";
 import { WorkoutHomeScreen } from "./src/screens/WorkoutHomeScreen";
+import { LibraryScreen } from "./src/screens/LibraryScreen";
 import { ActiveWorkoutScreen } from "./src/screens/ActiveWorkoutScreen";
 import { NewRoutineScreen } from "./src/screens/NewRoutineScreen";
 import { HistoryScreen } from "./src/screens/HistoryScreen";
@@ -40,6 +42,7 @@ function Themed() {
     <ThemeContext.Provider value={palette}>
       <StatusBar style={palette.dark ? "light" : "dark"} />
       <SafeAreaView style={[styles.root, { backgroundColor: palette.bg }]} edges={["top"]}>
+        <GlassBackdrop />
         {!ready ? (
           <View style={styles.loading}>
             <ActivityIndicator color={palette.primary} size="large" />
@@ -98,6 +101,7 @@ function Router() {
             onNewRoutine={() => setRoute({ name: "newRoutine" })}
           />
         )}
+        {tab === "library" && <LibraryScreen onOpenActive={() => setRoute({ name: "active" })} />}
         {tab === "history" && <HistoryScreen />}
         {tab === "progress" && (
           <ProgressScreen onOpenExercise={(id) => setRoute({ name: "exercise", id })} />

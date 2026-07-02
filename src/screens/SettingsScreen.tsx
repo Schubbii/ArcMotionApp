@@ -40,7 +40,7 @@ export function SettingsScreen() {
               key={th.id}
               activeOpacity={0.85}
               onPress={() => setTheme(th.id)}
-              style={[styles.themeCard, { backgroundColor: t.surface, borderColor: active ? t.primary : t.border }]}
+              style={[styles.themeCard, { backgroundColor: t.glassSurface, borderColor: active ? t.primary : t.glassBorder }]}
             >
               <View style={[styles.preview, { backgroundColor: th.palette.bg, borderColor: t.border }]}>
                 {th.swatches.slice(0, 3).map((c, i) => (
@@ -94,6 +94,23 @@ export function SettingsScreen() {
           />
           <View style={{ height: 14 }} />
           <StepControl label="Reps step" value={settings.repStep} step={1} onChange={setRepStep} />
+        </Card>
+
+        <SectionTitle>How It Works</SectionTitle>
+        <Card>
+          {[
+            "Start a workout from the Workout tab, or pick a prebuilt plan in the Library.",
+            "Log each set with the − / + buttons or type a custom number, then tap ✓ to complete it.",
+            "Tap a set's number to mark it as a warm-up (W) — warm-ups don't count toward records.",
+            "Long-press a set's number to delete that set.",
+            "Sets prefill automatically from your last session of the same exercise.",
+            "Finish saves only completed (✓) sets. Check Progress for records and trends.",
+          ].map((tip, i) => (
+            <View key={i} style={[styles.tipRow, i > 0 && { borderTopWidth: 1, borderTopColor: t.border }]}>
+              <Text style={{ color: t.primary, fontWeight: "900", width: 20 }}>{i + 1}</Text>
+              <Text style={{ color: t.textMuted, fontSize: 13, lineHeight: 19, flex: 1 }}>{tip}</Text>
+            </View>
+          ))}
         </Card>
 
         <SectionTitle>About</SectionTitle>
@@ -169,4 +186,5 @@ const styles = StyleSheet.create({
   stepSign: { fontSize: 22, fontWeight: "600", lineHeight: 26 },
   stepInput: { width: 56, height: 40, borderRadius: 10, fontSize: 16, fontWeight: "800", textAlign: "center" },
   nameInput: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, fontWeight: "600" },
+  tipRow: { flexDirection: "row", gap: 8, paddingVertical: 10 },
 });
