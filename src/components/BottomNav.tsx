@@ -2,9 +2,13 @@ import type { ReactElement } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme/ThemeContext";
+import { Glass } from "./Glass";
 import { DumbbellIcon, HistoryIcon, ChartIcon, SettingsIcon, BookIcon } from "./Icons";
 
 export type Tab = "workout" | "library" | "history" | "progress" | "settings";
+
+/** How much bottom padding scrolling screens need so content clears the bar. */
+export const NAV_CLEARANCE = 118;
 
 interface Props {
   active: Tab;
@@ -19,32 +23,54 @@ const ITEMS: { id: Tab; label: string; Icon: (p: { size?: number; color?: string
   { id: "settings", label: "Settings", Icon: SettingsIcon },
 ];
 
+/**
+ * Floating liquid-glass tab bar: a rounded pill with a real backdrop blur, so
+ * content visibly frosts as it scrolls underneath — the Apple Liquid Glass cue.
+ */
 export function BottomNav({ active, onChange }: Props) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
+
   return (
-    <View
-      style={[
-        styles.nav,
-        { backgroundColor: t.glassSurface, borderTopColor: t.glassBorder, paddingBottom: Math.max(insets.bottom, 10) },
-      ]}
-    >
-      {ITEMS.map(({ id, label, Icon }) => {
-        const on = active === id;
-        const color = on ? t.primary : t.textMuted;
-        return (
-          <TouchableOpacity key={id} style={styles.item} onPress={() => onChange(id)} activeOpacity={0.7}>
-            <Icon size={23} color={color} />
-            <Text style={[styles.label, { color }]}>{label}</Text>
-          </TouchableOpacity>
-        );
-      })}
+    <View style={[styles.wrap, { bottom: Math.max(insets.bottom, 12) }]}>
+      <Glass blur radius={30}>
+        <View style={styles.row}>
+          {ITEMS.map(({ id, label, Icon }) => {
+            const on = active === id;
+            const color = on ? t.primary : t.textMuted;
+            return (
+              <TouchableOpacity
+                key={id}
+                style={styles.item}
+                onPress={() => onChange(id)}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.iconWrap,
+                    on && { backgroundColor: t.primarySoft },
+                  ]}
+                >
+                  <Icon size={22} color={color} />
+                </View>
+                <Text style={[styles.label, { color }]}>{label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </Glass>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  nav: { flexDirection: "row", justifyContent: "space-around", paddingTop: 10, borderTopWidth: 1 },
-  item: { flex: 1, alignItems: "center", gap: 3 },
-  label: { fontSize: 11, fontWeight: "700" },
+  wrap: { position: "absolute", left: 14, right: 14 },
+  row: { flexDirection: "row", paddingVertical: 8, paddingHorizontal: 4 },
+  item: { flex: 1, alignItems: "center", gap: 1 },
+  iconWrap: {
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  label: { fontSize: 10.5, fontWeight: "700" },
 });

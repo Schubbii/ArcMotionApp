@@ -1,6 +1,7 @@
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
+import { NAV_CLEARANCE } from "../components/BottomNav";
 import { Card, Empty, ScreenTitle } from "../components/ui";
 import { ClockIcon, FlameIcon, TrashIcon } from "../components/Icons";
 import { formatDateHeading, formatDuration } from "../lib/format";
@@ -20,7 +21,7 @@ export function HistoryScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ScreenTitle title="History" sub={`${workouts.length} workout${workouts.length === 1 ? "" : "s"}`} />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: NAV_CLEARANCE }}>
         {workouts.length === 0 ? (
           <Empty emoji="🗓️" text="Finished workouts show up here. Start one from the Workout tab." />
         ) : (

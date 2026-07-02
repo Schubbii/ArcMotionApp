@@ -1,6 +1,7 @@
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
+import { NAV_CLEARANCE } from "../components/BottomNav";
 import { Card, PrimaryButton, SectionTitle } from "../components/ui";
 import { ArcLogo } from "../components/ArcLogo";
 import { PlusIcon, ChevronRight, ClockIcon, FlameIcon, TrashIcon } from "../components/Icons";
@@ -45,7 +46,7 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
   const lastWorkout = workouts[0];
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
+    <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: NAV_CLEARANCE }}>
       <View style={{ marginBottom: 8, alignItems: "center" }}>
         <Text style={[styles.greet, { color: t.text, alignSelf: "flex-start" }]}>
           {greeting()}

@@ -2,7 +2,9 @@ import { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
+import { NAV_CLEARANCE } from "../components/BottomNav";
 import { Card, Empty, ScreenTitle, SectionTitle } from "../components/ui";
+import { Glass } from "../components/Glass";
 import { ChevronRight, TrophyIcon } from "../components/Icons";
 import { LineChart, type ChartPoint } from "../components/LineChart";
 import { personalRecord, workoutVolume, workoutSetCount } from "../lib/stats";
@@ -62,17 +64,17 @@ export function ProgressScreen({ onOpenExercise }: Props) {
   return (
     <View style={{ flex: 1 }}>
       <ScreenTitle title="Progress" sub="Spot trends & beat your records" />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: NAV_CLEARANCE }}>
         {workouts.length === 0 ? (
           <Empty emoji="📈" text="Log a few workouts and your stats & graphs will appear here." />
         ) : (
           <>
             <View style={styles.tiles}>
               {tiles.map((tile) => (
-                <View key={tile.label} style={[styles.tile, { backgroundColor: t.glassSurface, borderColor: t.glassBorder }]}>
+                <Glass key={tile.label} style={styles.tile}>
                   <Text style={[styles.tileVal, { color: t.text }]}>{tile.value}</Text>
                   <Text style={[styles.tileLbl, { color: t.textMuted }]}>{tile.label}</Text>
-                </View>
+                </Glass>
               ))}
             </View>
 
@@ -114,7 +116,7 @@ export function ProgressScreen({ onOpenExercise }: Props) {
 
 const styles = StyleSheet.create({
   tiles: { flexDirection: "row", gap: 10 },
-  tile: { flex: 1, borderRadius: 16, borderWidth: 1, padding: 14 },
+  tile: { flex: 1, borderRadius: 16, padding: 14 },
   tileVal: { fontSize: 20, fontWeight: "900" },
   tileLbl: { fontSize: 11.5, fontWeight: "600", marginTop: 2 },
   exCard: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },

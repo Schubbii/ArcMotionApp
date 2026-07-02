@@ -13,6 +13,7 @@ import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
 import type { WorkoutSet } from "../types";
 import { AddExerciseModal } from "../components/AddExerciseModal";
+import { Glass } from "../components/Glass";
 import { CheckIcon, ChevronLeft, PlusIcon, TrashIcon } from "../components/Icons";
 import { PrimaryButton } from "../components/ui";
 import { formatDuration } from "../lib/format";
@@ -120,7 +121,7 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
         {active.entries.map((entry) => {
           const ex = exerciseById(entry.exerciseId);
           return (
-            <View key={entry.id} style={[styles.exCard, { backgroundColor: t.glassSurface, borderColor: t.glassBorder }]}>
+            <Glass key={entry.id} style={styles.exCard}>
               <View style={styles.exHead}>
                 <Text style={[styles.exName, { color: t.primary }]}>{ex?.name ?? "Exercise"}</Text>
                 <TouchableOpacity onPress={() => removeEntry(entry.id)} hitSlop={8}>
@@ -168,7 +169,7 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
                 <PlusIcon size={16} color={t.text} />
                 <Text style={{ color: t.text, fontWeight: "700", fontSize: 13 }}>Add Set</Text>
               </TouchableOpacity>
-            </View>
+            </Glass>
           );
         })}
 
@@ -325,7 +326,7 @@ const styles = StyleSheet.create({
   titleInput: { flex: 1, fontSize: 18, fontWeight: "800", paddingVertical: 4 },
   finish: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 11 },
   stats: { flexDirection: "row", paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1 },
-  exCard: { borderRadius: 16, borderWidth: 1, padding: 14, marginBottom: 14 },
+  exCard: { borderRadius: 16, padding: 14, marginBottom: 14 },
   tip: { fontSize: 11.5, textAlign: "center", marginBottom: 12, lineHeight: 16 },
   exHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
   exName: { fontSize: 16, fontWeight: "800", flex: 1 },

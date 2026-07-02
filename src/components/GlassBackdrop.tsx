@@ -22,9 +22,10 @@ export function GlassBackdrop() {
             <Stop offset="100%" stopColor={t.blobB} stopOpacity={0} />
           </RadialGradient>
         </Defs>
-        <Circle cx="12%" cy="6%" r="45%" fill="url(#blobA)" />
-        <Circle cx="95%" cy="28%" r="40%" fill="url(#blobB)" />
-        <Circle cx="45%" cy="102%" r="42%" fill="url(#blobA)" opacity={0.6} />
+        <Circle cx="12%" cy="5%" r="52%" fill="url(#blobA)" />
+        <Circle cx="98%" cy="30%" r="46%" fill="url(#blobB)" />
+        <Circle cx="30%" cy="60%" r="38%" fill="url(#blobB)" opacity={0.5} />
+        <Circle cx="60%" cy="103%" r="50%" fill="url(#blobA)" opacity={0.8} />
       </Svg>
     </View>
   );

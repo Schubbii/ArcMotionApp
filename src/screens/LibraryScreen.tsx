@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
+import { NAV_CLEARANCE } from "../components/BottomNav";
 import { PROGRAMS, PROGRAM_GOALS, type Program, type ProgramGoal } from "../data/programs";
 import { Card, Pill, ScreenTitle } from "../components/ui";
 import { CheckIcon, PlusIcon } from "../components/Icons";
@@ -63,7 +64,7 @@ export function LibraryScreen({ onOpenActive }: Props) {
         ))}
       </ScrollView>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: NAV_CLEARANCE }}>
         {visible.map((p) => (
           <ProgramCard
             key={p.id}

@@ -1,14 +1,10 @@
 import type { ReactNode } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, type ViewStyle } from "react-native";
 import { useTheme } from "../theme/ThemeContext";
+import { Glass } from "./Glass";
 
 export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
-  const t = useTheme();
-  return (
-    <View style={[ui.card, { backgroundColor: t.glassSurface, borderColor: t.glassBorder }, style]}>
-      {children}
-    </View>
-  );
+  return <Glass style={[ui.card, style ?? {}]}>{children}</Glass>;
 }
 
 export function SectionTitle({ children, style }: { children: ReactNode; style?: ViewStyle }) {
@@ -101,7 +97,7 @@ export function Pill({
 }
 
 export const ui = StyleSheet.create({
-  card: { borderRadius: 18, padding: 16, borderWidth: 1 },
+  card: { borderRadius: 18, padding: 16 },
   section: { fontSize: 12, fontWeight: "800", letterSpacing: 0.8, marginTop: 18, marginBottom: 10, marginHorizontal: 4 },
   screenHead: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 10 },
   h1: { fontSize: 26, fontWeight: "900", letterSpacing: -0.5 },

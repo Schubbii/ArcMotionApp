@@ -1,6 +1,7 @@
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
+import { NAV_CLEARANCE } from "../components/BottomNav";
 import { THEMES } from "../theme/themes";
 import { Card, ScreenTitle, SectionTitle } from "../components/ui";
 import { CheckIcon } from "../components/Icons";
@@ -12,7 +13,7 @@ export function SettingsScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ScreenTitle title="Settings" sub="Make ArcMotion yours" />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: NAV_CLEARANCE }}>
         <SectionTitle>Profile</SectionTitle>
         <Card>
           <Text style={{ color: t.textMuted, fontSize: 13, fontWeight: "700", marginBottom: 8 }}>
