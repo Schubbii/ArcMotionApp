@@ -83,7 +83,7 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
   };
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top }}>
+    <View style={{ flex: 1 }}>
       {/* Header */}
       <View style={styles.head}>
         <TouchableOpacity onPress={onClose} hitSlop={8} style={styles.headBtn}>

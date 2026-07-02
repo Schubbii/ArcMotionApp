@@ -26,7 +26,7 @@ export function NewRoutineScreen({ onClose }: Props) {
   };
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top }}>
+    <View style={{ flex: 1 }}>
       <View style={styles.head}>
         <TouchableOpacity onPress={onClose} hitSlop={8} style={{ padding: 4 }}>
           <ChevronLeft color={t.text} />

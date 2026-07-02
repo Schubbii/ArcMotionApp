@@ -7,6 +7,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
 import { ArcLogo } from "../components/ArcLogo";
@@ -14,6 +15,7 @@ import { PrimaryButton } from "../components/ui";
 
 export function OnboardingScreen() {
   const t = useTheme();
+  const insets = useSafeAreaInsets();
   const { setName } = useAppData();
   const [value, setValue] = useState("");
 
@@ -27,7 +29,7 @@ export function OnboardingScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={styles.root}>
+      <View style={[styles.root, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.center}>
           <ArcLogo width={190} color={t.text} />
           <Text style={[styles.welcome, { color: t.text }]}>Welcome to ArcMotion</Text>
@@ -59,7 +61,7 @@ export function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, padding: 24, justifyContent: "space-between" },
+  root: { flex: 1, paddingHorizontal: 24, paddingTop: 24, justifyContent: "space-between" },
   center: { flex: 1, justifyContent: "center", alignItems: "center", gap: 6 },
   welcome: { fontSize: 24, fontWeight: "900", marginTop: 24, textAlign: "center" },
   sub: { fontSize: 15, textAlign: "center", marginBottom: 24, lineHeight: 21 },
