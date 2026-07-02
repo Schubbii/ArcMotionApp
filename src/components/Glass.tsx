@@ -51,14 +51,21 @@ export function Glass({ children, style, radius = 20, blur = false, intensity }:
     >
       {blur && (
         <BlurView
-          intensity={intensity ?? (t.dark ? 30 : 45)}
+          intensity={intensity ?? (t.dark ? 45 : 55)}
           tint={t.dark ? "dark" : "light"}
           experimentalBlurMethod="dimezisBlurView"
-          style={StyleSheet.absoluteFill}
+          style={[StyleSheet.absoluteFill, { borderRadius: r, overflow: "hidden" }]}
         />
       )}
       {blur && (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: t.glassSurface }]} />
+        // Deliberately faint scrim: the content behind must stay clearly
+        // visible even where the native blur isn't available (Android/Expo Go).
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: t.dark ? "rgba(10,13,18,0.32)" : "rgba(255,255,255,0.35)" },
+          ]}
+        />
       )}
 
       {/* Sheen + specular edge overlay */}

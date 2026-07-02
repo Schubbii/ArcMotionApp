@@ -15,10 +15,12 @@ export function GlassBackdrop() {
         <Defs>
           <RadialGradient id="blobA" cx="50%" cy="50%" r="50%">
             <Stop offset="0%" stopColor={t.blobA} stopOpacity={t.blobOpacity} />
+            <Stop offset="55%" stopColor={t.blobA} stopOpacity={t.blobOpacity * 0.45} />
             <Stop offset="100%" stopColor={t.blobA} stopOpacity={0} />
           </RadialGradient>
           <RadialGradient id="blobB" cx="50%" cy="50%" r="50%">
             <Stop offset="0%" stopColor={t.blobB} stopOpacity={t.blobOpacity * 0.85} />
+            <Stop offset="55%" stopColor={t.blobB} stopOpacity={t.blobOpacity * 0.4} />
             <Stop offset="100%" stopColor={t.blobB} stopOpacity={0} />
           </RadialGradient>
         </Defs>
