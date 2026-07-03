@@ -29,7 +29,17 @@ export function ResumeBar({ onPress }: { onPress: () => void }) {
   return (
     <View style={[styles.wrap, { bottom: Math.max(insets.bottom, 12) + 68 }]}>
       <PressableScale onPress={onPress} scaleTo={0.97}>
-        <Glass radius={16} style={{ ...styles.inner, borderWidth: 1.5, borderColor: t.primary }}>
+        {/* Solid surface (not glassSurface): this is an actionable control, so
+            content scrolling behind it must not bleed through. */}
+        <Glass
+          radius={16}
+          style={{
+            ...styles.inner,
+            backgroundColor: t.surface,
+            borderWidth: 1.5,
+            borderColor: t.primary,
+          }}
+        >
           <View style={[styles.dot, { backgroundColor: t.primary }]} />
           <Text style={[styles.title, { color: t.text }]} numberOfLines={1}>
             {active.title}
@@ -53,6 +63,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 11,
     borderRadius: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 6,
   },
   dot: { width: 8, height: 8, borderRadius: 4 },
   title: { flex: 1, fontWeight: "800", fontSize: 14 },
