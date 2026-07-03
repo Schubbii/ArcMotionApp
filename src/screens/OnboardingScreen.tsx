@@ -18,9 +18,13 @@ export function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { setName } = useAppData();
   const [value, setValue] = useState("");
+  const [error, setError] = useState("");
 
   const submit = () => {
-    if (!value.trim()) return;
+    if (!value.trim()) {
+      setError("Please enter your name first");
+      return;
+    }
     setName(value.trim());
   };
 
@@ -39,7 +43,10 @@ export function OnboardingScreen() {
 
           <TextInput
             value={value}
-            onChangeText={setValue}
+            onChangeText={(v) => {
+              setValue(v);
+              if (error) setError("");
+            }}
             placeholder="Your name"
             placeholderTextColor={t.textMuted}
             style={[styles.input, { backgroundColor: t.surface, color: t.text, borderColor: t.border }]}
@@ -48,6 +55,11 @@ export function OnboardingScreen() {
             onSubmitEditing={submit}
             maxLength={40}
           />
+          {error ? (
+            <Text style={{ color: t.danger, fontSize: 13, fontWeight: "600", marginTop: 10 }}>
+              {error}
+            </Text>
+          ) : null}
         </View>
 
         <PrimaryButton

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import {
   Animated,
+  Platform,
   StyleSheet,
   Text,
   View,
@@ -61,8 +62,9 @@ export function BottomNav({ active, onChange }: Props) {
     if (!l) return;
     const toX = l.x + PILL_INSET;
 
-    if (!measured.current) {
-      // First measurement: snap into place, don't slide in from the corner.
+    if (!measured.current || Platform.OS === "web") {
+      // First measurement (and always on web, where the animated transform can
+      // leave ghost artifacts): snap into place without animating.
       indicatorX.setValue(toX);
       measured.current = true;
       return;

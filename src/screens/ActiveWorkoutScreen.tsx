@@ -8,10 +8,10 @@ import type { WorkoutSet } from "../types";
 import { AddExerciseModal } from "../components/AddExerciseModal";
 import { Glass } from "../components/Glass";
 import { PressableScale } from "../components/motion";
-import { CheckIcon, ChevronLeft, PlusIcon, TrashIcon } from "../components/Icons";
+import { CheckIcon, ChevronLeft, PencilIcon, PlusIcon, TrashIcon } from "../components/Icons";
 import { PrimaryButton } from "../components/ui";
 import { formatDuration } from "../lib/format";
-import { workingSets } from "../lib/stats";
+import { personalRecord, workingSets } from "../lib/stats";
 
 interface Props {
   onClose: () => void;
@@ -23,6 +23,7 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
   const {
     active,
     settings,
+    workouts,
     exerciseById,
     setActiveTitle,
     addExerciseToActive,
@@ -64,8 +65,28 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
     }
     showDialog("Finish workout?", "Your completed sets will be saved.", [
       { text: "Cancel", style: "cancel" },
-      { text: "Finish", style: "default", onPress: () => { finishActive(); onClose(); } },
+      { text: "Finish", style: "default", onPress: finishWithSummary },
     ]);
+  };
+
+  // Build the completion summary (duration, volume, sets, new PRs) before the
+  // session is cleared, then show it once we're back on the tabs (UX F2).
+  const finishWithSummary = () => {
+    const duration = formatDuration(Date.now() - active.startTs);
+    const prs: string[] = [];
+    for (const e of active.entries) {
+      const best = Math.max(0, ...workingSets(e.sets).map((st) => st.weight));
+      if (best > 0 && best > personalRecord(workouts, e.exerciseId)) {
+        prs.push(`\u{1F3C6} New PR: ${exerciseById(e.exerciseId)?.name ?? "Exercise"} — ${best} ${unit}`);
+      }
+    }
+    const summary = [
+      `Time ${duration} · Volume ${Math.round(volume).toLocaleString()} ${unit} · ${setCount} set${setCount === 1 ? "" : "s"}`,
+      ...prs,
+    ].join("\n");
+    finishActive();
+    onClose();
+    setTimeout(() => showDialog("Workout complete \u{1F4AA}", summary, [{ text: "Nice!" }]), 400);
   };
 
   const confirmDiscard = () => {
@@ -82,13 +103,16 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
         <TouchableOpacity onPress={onClose} hitSlop={8} style={styles.headBtn}>
           <ChevronLeft color={t.text} />
         </TouchableOpacity>
-        <TextInput
-          value={active.title}
-          onChangeText={setActiveTitle}
-          style={[styles.titleInput, { color: t.text }]}
-          placeholder="Workout"
-          placeholderTextColor={t.textMuted}
-        />
+        <View style={styles.titleWrap}>
+          <TextInput
+            value={active.title}
+            onChangeText={setActiveTitle}
+            style={[styles.titleInput, { color: t.text }]}
+            placeholder="Workout"
+            placeholderTextColor={t.textMuted}
+          />
+          <PencilIcon size={13} color={t.textFaint} />
+        </View>
         <PressableScale onPress={confirmFinish} scaleTo={0.93} style={[styles.finish, { backgroundColor: t.primary }]}>
           <Text style={{ color: t.onPrimary, fontWeight: "800", fontSize: 14 }}>Finish</Text>
         </PressableScale>
@@ -107,7 +131,7 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
             Add an exercise to start logging your sets.
           </Text>
         ) : (
-          <Text style={[styles.tip, { color: t.textFaint }]}>
+          <Text style={[styles.tip, { color: t.textMuted }]}>
             Tip: tap a set's number to mark it as warm-up (W) · long-press it to delete the set
           </Text>
         )}
@@ -173,8 +197,8 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
           onPress={() => setPickerOpen(true)}
           style={{ marginTop: 4 }}
         />
-        <TouchableOpacity onPress={confirmDiscard} style={{ marginTop: 14, alignItems: "center" }}>
-          <Text style={{ color: t.danger, fontWeight: "700" }}>Discard Workout</Text>
+        <TouchableOpacity onPress={confirmDiscard} style={{ marginTop: 44, alignItems: "center", padding: 8 }}>
+          <Text style={{ color: t.danger, fontWeight: "700", fontSize: 13, opacity: 0.85 }}>Discard Workout</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -292,9 +316,14 @@ function SetRow({
   onRemove: () => void;
 }) {
   return (
-    <View style={[styles.setRow, set.done && { backgroundColor: t.rowDone }]}>
-      <TouchableOpacity style={styles.colSet} onPress={onToggleWarmup} onLongPress={onRemove} hitSlop={6}>
-        <Text style={{ color: set.warmup ? t.trophy : t.text, fontWeight: "800", fontSize: 15, textAlign: "center" }}>
+    <View style={[styles.setRow, set.done && { backgroundColor: t.rowDone }, set.warmup && { opacity: 0.65 }]}>
+      <TouchableOpacity
+        style={[styles.colSet, styles.setNumChip, { backgroundColor: set.warmup ? t.primarySoft : t.surface2 }]}
+        onPress={onToggleWarmup}
+        onLongPress={onRemove}
+        hitSlop={6}
+      >
+        <Text style={{ color: set.warmup ? t.trophy : t.text, fontWeight: "800", fontSize: 14, textAlign: "center" }}>
           {label}
         </Text>
       </TouchableOpacity>
@@ -320,6 +349,7 @@ function SetRow({
 const styles = StyleSheet.create({
   head: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8 },
   headBtn: { padding: 4 },
+  titleWrap: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6 },
   titleInput: { flex: 1, fontSize: 18, fontWeight: "800", paddingVertical: 4 },
   finish: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 11 },
   stats: { flexDirection: "row", paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1 },
@@ -331,7 +361,8 @@ const styles = StyleSheet.create({
   colLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 0.3 },
   colLabelCenter: { textAlign: "center" },
   setRow: { flexDirection: "row", alignItems: "center", paddingVertical: 6, borderRadius: 8, marginVertical: 1, gap: 6 },
-  colSet: { width: 30, alignItems: "center" },
+  colSet: { width: 34, alignItems: "center" },
+  setNumChip: { height: 38, borderRadius: 10, justifyContent: "center" },
   colGroup: { flex: 1, paddingHorizontal: 2 },
   colCheck: { width: 38, alignItems: "center" },
   check: { height: 38, width: 38, borderRadius: 10, alignItems: "center", justifyContent: "center", alignSelf: "center" },

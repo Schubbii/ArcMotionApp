@@ -27,7 +27,13 @@ increments) → new routine (multi-select picker) → custom exercise creation.
 
 ---
 
-## Findings & recommendations (not yet implemented)
+> **Update:** All findings below (F1–F13) have been implemented and re-verified
+> with a browser smoke test (resume bar, finish summary with PR detection,
+> set-number chips, CTA hierarchy, inline validation hints, chart placeholders,
+> level-badge dedupe, discard spacing, title pencil, "+ New" label, web
+> indicator snap, tip contrast).
+
+## Findings & recommendations (all implemented)
 
 ### High impact
 

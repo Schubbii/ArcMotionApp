@@ -18,9 +18,13 @@ export function NewRoutineScreen({ onClose }: Props) {
   const [name, setName] = useState("");
   const [ids, setIds] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [hint, setHint] = useState(false);
 
   const save = () => {
-    if (!name.trim() || ids.length === 0) return;
+    if (!name.trim() || ids.length === 0) {
+      setHint(true);
+      return;
+    }
     createRoutine(name, ids);
     onClose();
   };
@@ -40,6 +44,11 @@ export function NewRoutineScreen({ onClose }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}>
+        {hint && (
+          <Text style={{ color: t.danger, fontSize: 13, fontWeight: "600", marginBottom: 12 }}>
+            Give the routine a name and add at least one exercise to save it.
+          </Text>
+        )}
         <TextInput
           value={name}
           onChangeText={setName}

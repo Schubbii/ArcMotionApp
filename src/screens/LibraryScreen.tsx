@@ -103,9 +103,11 @@ function ProgramCard({
     <Card style={{ marginBottom: 14 }}>
       <View style={styles.cardTop}>
         <Text style={[styles.name, { color: t.text }]}>{program.name}</Text>
-        <View style={[styles.levelBadge, { backgroundColor: t.primarySoft }]}>
-          <Text style={{ color: t.text, fontWeight: "800", fontSize: 11 }}>{program.level}</Text>
-        </View>
+        {String(program.level) !== String(program.goal) && (
+          <View style={[styles.levelBadge, { backgroundColor: t.primarySoft }]}>
+            <Text style={{ color: t.text, fontWeight: "800", fontSize: 11 }}>{program.level}</Text>
+          </View>
+        )}
       </View>
       <Text style={[styles.goalTag, { color: t.accent }]}>{program.goal.toUpperCase()}</Text>
       <Text style={[styles.desc, { color: t.textMuted }]}>{program.description}</Text>

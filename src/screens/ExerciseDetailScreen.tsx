@@ -84,7 +84,13 @@ export function ExerciseDetailScreen({ exerciseId, onClose }: Props) {
 
             <Card>
               <Text style={[styles.metricTitle, { color: t.text }]}>{METRIC_LABELS[metric]}</Text>
-              <LineChart points={points} height={200} markMax />
+              {points.length < 2 ? (
+                <Text style={{ color: t.textMuted, fontSize: 13.5, lineHeight: 20, textAlign: "center", paddingVertical: 22 }}>
+                  Latest: {points[0]?.y ?? 0}{metric === "reps" ? " reps" : ` ${unit}`}.{"\n"}Log this exercise again to see a trend line.
+                </Text>
+              ) : (
+                <LineChart points={points} height={200} markMax />
+              )}
             </Card>
 
             <SectionTitle>History</SectionTitle>

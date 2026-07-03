@@ -6,7 +6,7 @@ import { NAV_CLEARANCE } from "../components/BottomNav";
 import { Card, PrimaryButton, SectionTitle } from "../components/ui";
 import { PressableScale } from "../components/motion";
 import { ArcLogo } from "../components/ArcLogo";
-import { PlusIcon, ChevronRight, ClockIcon, FlameIcon, TrashIcon } from "../components/Icons";
+import { PlusIcon, ClockIcon, FlameIcon, TrashIcon } from "../components/Icons";
 import { formatDuration, greeting } from "../lib/format";
 import { workoutVolume, workoutSetCount } from "../lib/stats";
 
@@ -59,21 +59,6 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
         <ArcLogo width={44} color={t.text} />
       </View>
 
-      {active && (
-        <PressableScale scaleTo={0.97} onPress={onOpenActive}>
-          <Card style={{ ...styles.resume, borderColor: t.primary }}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.resumeLabel, { color: t.primary }]}>WORKOUT IN PROGRESS</Text>
-              <Text style={[styles.resumeTitle, { color: t.text }]}>{active.title}</Text>
-              <Text style={[styles.resumeSub, { color: t.textMuted }]}>
-                {active.entries.length} exercise{active.entries.length === 1 ? "" : "s"} · tap to resume
-              </Text>
-            </View>
-            <ChevronRight color={t.primary} />
-          </Card>
-        </PressableScale>
-      )}
-
       <SectionTitle>Quick Start</SectionTitle>
       <PrimaryButton
         title="Start Empty Workout"
@@ -118,7 +103,12 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
               <Text style={[styles.routineEx, { color: t.textMuted }]} numberOfLines={2}>
                 {names || "No exercises"}
               </Text>
-              <PrimaryButton title="Start Routine" onPress={() => start(() => startRoutine(r.id))} style={{ marginTop: 12 }} />
+              <PressableScale
+                style={[styles.startGhost, { backgroundColor: t.surface2 }]}
+                onPress={() => start(() => startRoutine(r.id))}
+              >
+                <Text style={{ color: t.primary, fontWeight: "800", fontSize: 14 }}>Start Routine</Text>
+              </PressableScale>
             </Card>
           );
         })
@@ -162,10 +152,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   greet: { fontSize: 19, fontWeight: "800", flex: 1 },
-  resume: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1.5, marginTop: 14 },
-  resumeLabel: { fontSize: 11, fontWeight: "900", letterSpacing: 0.6 },
-  resumeTitle: { fontSize: 18, fontWeight: "800", marginTop: 3 },
-  resumeSub: { fontSize: 13, marginTop: 2 },
+  startGhost: { borderRadius: 12, paddingVertical: 11, alignItems: "center", marginTop: 12 },
   routineHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   newRoutine: { flexDirection: "row", alignItems: "center", gap: 4, marginRight: 4 },
   routineTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },

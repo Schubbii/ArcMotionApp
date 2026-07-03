@@ -72,7 +72,7 @@ export function AddExerciseModal({ visible, onClose, onPick, selectedIds = [], m
             <View style={{ width: 48 }} />
           ) : (
             <TouchableOpacity onPress={() => setCreating(true)} hitSlop={8}>
-              <Text style={[styles.cancel, { color: t.accent, fontWeight: "800" }]}>Create</Text>
+              <Text style={[styles.cancel, { color: t.accent, fontWeight: "800" }]}>+ New</Text>
             </TouchableOpacity>
           )}
         </View>

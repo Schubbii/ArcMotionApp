@@ -8,6 +8,7 @@ import { paletteFor } from "./src/theme/themes";
 import { BottomNav, type Tab } from "./src/components/BottomNav";
 import { GlassBackdrop } from "./src/components/GlassBackdrop";
 import { FadeSlideIn } from "./src/components/motion";
+import { ResumeBar } from "./src/components/ResumeBar";
 import { WorkoutHomeScreen } from "./src/screens/WorkoutHomeScreen";
 import { LibraryScreen } from "./src/screens/LibraryScreen";
 import { ActiveWorkoutScreen } from "./src/screens/ActiveWorkoutScreen";
@@ -123,6 +124,7 @@ function Router() {
         )}
         {tab === "settings" && <SettingsScreen />}
       </FadeSlideIn>
+      <ResumeBar onPress={() => setRoute({ name: "active" })} />
       <BottomNav active={tab} onChange={setTab} />
     </View>
   );

@@ -81,7 +81,13 @@ export function ProgressScreen({ onOpenExercise }: Props) {
 
             <SectionTitle>Weekly Volume</SectionTitle>
             <Card>
-              <LineChart points={volumePoints} height={180} />
+              {volumePoints.length < 2 ? (
+                <Text style={{ color: t.textMuted, fontSize: 13.5, lineHeight: 20, textAlign: "center", paddingVertical: 22 }}>
+                  {"\u{1F4C8}"} Log workouts in a second week to see your volume trend here.
+                </Text>
+              ) : (
+                <LineChart points={volumePoints} height={180} />
+              )}
             </Card>
 
             <SectionTitle>Exercises</SectionTitle>
