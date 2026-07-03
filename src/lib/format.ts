@@ -46,10 +46,6 @@ export function formatDateHeading(iso: string): string {
   return `${WEEKDAYS[date.getDay()]}, ${MONTHS[date.getMonth()]} ${d}`;
 }
 
-export function shortDate(iso: string): string {
-  const [, m, d] = iso.split("-").map(Number);
-  return `${d} ${MONTHS[m - 1]}`;
-}
 
 /** Greeting used on the home header. */
 export function greeting(): string {

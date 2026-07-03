@@ -156,13 +156,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       settings,
 
       addExercise: (name, group, equipment, weighted) => {
-        const ex: Exercise = { id: uid(), name: name.trim(), group, equipment, weighted };
+        const ex: Exercise = { id: uid(), name: name.trim().slice(0, 60), group, equipment, weighted };
         setExercises((prev) => [...prev, ex]);
         return ex;
       },
       exerciseById,
       createRoutine: (name, exerciseIds) =>
-        setRoutines((prev) => [...prev, { id: uid(), name: name.trim(), exerciseIds }]),
+        setRoutines((prev) => [...prev, { id: uid(), name: name.trim().slice(0, 60), exerciseIds }]),
       deleteRoutine: (id) => setRoutines((prev) => prev.filter((r) => r.id !== id)),
 
       startEmptyWorkout: () =>

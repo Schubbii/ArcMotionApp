@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  FlatList,
   Modal,
   ScrollView,
   StyleSheet,
@@ -7,7 +8,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  FlatList,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppData } from "../context/AppData";
@@ -36,6 +36,7 @@ export function AddExerciseModal({ visible, onClose, onPick, selectedIds = [], m
   const { exercises, addExercise } = useAppData();
   const [query, setQuery] = useState("");
   const [group, setGroup] = useState<MuscleGroup | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -45,11 +46,9 @@ export function AddExerciseModal({ visible, onClose, onPick, selectedIds = [], m
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [exercises, query, group]);
 
-  const handleCreate = () => {
-    const name = query.trim();
-    if (!name) return;
-    const ex = addExercise(name, group ?? "Full Body", "Other", true);
+  const handleCreated = (ex: Exercise) => {
     onPick(ex.id);
+    setCreating(false);
     setQuery("");
     if (!multi) onClose();
   };
@@ -58,73 +57,180 @@ export function AddExerciseModal({ visible, onClose, onPick, selectedIds = [], m
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} presentationStyle="fullScreen">
       <View style={[styles.root, { backgroundColor: t.bg, paddingTop: insets.top }]}>
         <View style={styles.head}>
-          <TouchableOpacity onPress={onClose} hitSlop={8}>
-            <Text style={[styles.cancel, { color: t.accent }]}>Cancel</Text>
+          <TouchableOpacity
+            onPress={() => (creating ? setCreating(false) : onClose())}
+            hitSlop={8}
+          >
+            <Text style={[styles.cancel, { color: t.accent }]}>{creating ? "Back" : "Cancel"}</Text>
           </TouchableOpacity>
-          <Text style={[styles.title, { color: t.text }]}>Add Exercise</Text>
-          <TouchableOpacity onPress={handleCreate} hitSlop={8}>
-            <Text style={[styles.cancel, { color: t.accent, fontWeight: "800" }]}>Create</Text>
-          </TouchableOpacity>
+          <Text style={[styles.title, { color: t.text }]}>
+            {creating ? "New Exercise" : "Add Exercise"}
+          </Text>
+          {creating ? (
+            <View style={{ width: 48 }} />
+          ) : (
+            <TouchableOpacity onPress={() => setCreating(true)} hitSlop={8}>
+              <Text style={[styles.cancel, { color: t.accent, fontWeight: "800" }]}>Create</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        <View style={[styles.search, { backgroundColor: t.surface2, borderColor: t.border }]}>
-          <SearchIcon size={18} color={t.textMuted} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search exercise"
-            placeholderTextColor={t.textMuted}
-            style={[styles.searchInput, { color: t.text }]}
-            autoCorrect={false}
+        {creating ? (
+          <CreateExerciseForm
+            initialName={query.trim()}
+            initialGroup={group}
+            onCreate={(name, g, eq, weighted) => handleCreated(addExercise(name, g, eq, weighted))}
           />
-          {query.length > 0 && (
-            <TouchableOpacity onPress={() => setQuery("")} hitSlop={8}>
-              <CloseIcon size={18} color={t.textMuted} />
-            </TouchableOpacity>
-          )}
-        </View>
+        ) : (
+          <>
+            <View style={[styles.search, { backgroundColor: t.surface2, borderColor: t.border }]}>
+              <SearchIcon size={18} color={t.textMuted} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search exercise"
+                placeholderTextColor={t.textMuted}
+                style={[styles.searchInput, { color: t.text }]}
+                autoCorrect={false}
+              />
+              {query.length > 0 && (
+                <TouchableOpacity onPress={() => setQuery("")} hitSlop={8}>
+                  <CloseIcon size={18} color={t.textMuted} />
+                </TouchableOpacity>
+              )}
+            </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chips}
-          style={{ flexGrow: 0 }}
-        >
-          <Pill label="All" active={group === null} onPress={() => setGroup(null)} />
-          {GROUPS.map((g) => (
-            <Pill key={g} label={g} active={group === g} onPress={() => setGroup(group === g ? null : g)} />
-          ))}
-        </ScrollView>
-
-        <FlatList
-          data={filtered}
-          keyExtractor={(e) => e.id}
-          contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}
-          keyboardShouldPersistTaps="handled"
-          ListEmptyComponent={
-            <TouchableOpacity
-              style={[styles.createRow, { borderColor: t.border }]}
-              onPress={handleCreate}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chips}
+              style={{ flexGrow: 0 }}
             >
-              <PlusIcon size={20} color={t.primary} />
-              <Text style={{ color: t.text, fontWeight: "700" }}>
-                {query.trim() ? `Create "${query.trim()}"` : "Create a new exercise"}
-              </Text>
-            </TouchableOpacity>
-          }
-          renderItem={({ item }) => (
-            <ExerciseRow
-              ex={item}
-              selected={selectedIds.includes(item.id)}
-              onPress={() => {
-                onPick(item.id);
-                if (!multi) onClose();
-              }}
+              <Pill label="All" active={group === null} onPress={() => setGroup(null)} />
+              {GROUPS.map((g) => (
+                <Pill key={g} label={g} active={group === g} onPress={() => setGroup(group === g ? null : g)} />
+              ))}
+            </ScrollView>
+
+            <FlatList
+              data={filtered}
+              keyExtractor={(e) => e.id}
+              contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}
+              keyboardShouldPersistTaps="handled"
+              ListEmptyComponent={
+                <PressableScale
+                  scaleTo={0.97}
+                  style={[styles.createRow, { borderColor: t.border }]}
+                  onPress={() => setCreating(true)}
+                >
+                  <PlusIcon size={20} color={t.primary} />
+                  <Text style={{ color: t.text, fontWeight: "700" }}>
+                    {query.trim() ? `Create "${query.trim()}"` : "Create a new exercise"}
+                  </Text>
+                </PressableScale>
+              }
+              renderItem={({ item }) => (
+                <ExerciseRow
+                  ex={item}
+                  selected={selectedIds.includes(item.id)}
+                  onPress={() => {
+                    onPick(item.id);
+                    if (!multi) onClose();
+                  }}
+                />
+              )}
             />
-          )}
-        />
+          </>
+        )}
       </View>
     </Modal>
+  );
+}
+
+/** Full create form: name, muscle group, equipment, weighted/bodyweight. */
+function CreateExerciseForm({
+  initialName,
+  initialGroup,
+  onCreate,
+}: {
+  initialName: string;
+  initialGroup: MuscleGroup | null;
+  onCreate: (name: string, group: MuscleGroup, equipment: Equipment, weighted: boolean) => void;
+}) {
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  const [name, setName] = useState(initialName);
+  const [group, setGroup] = useState<MuscleGroup>(initialGroup ?? "Chest");
+  const [equipment, setEquipment] = useState<Equipment>("Barbell");
+  const [weighted, setWeighted] = useState(true);
+  const valid = name.trim().length > 0;
+
+  const pickEquipment = (eq: Equipment) => {
+    setEquipment(eq);
+    // Bodyweight equipment implies an unweighted exercise by default.
+    if (eq === "Bodyweight") setWeighted(false);
+  };
+
+  return (
+    <ScrollView
+      contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 32 }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Text style={[styles.fieldLabel, { color: t.textMuted }]}>NAME</Text>
+      <TextInput
+        value={name}
+        onChangeText={setName}
+        placeholder="e.g. Incline Cable Fly"
+        placeholderTextColor={t.textMuted}
+        style={[styles.input, { backgroundColor: t.surface2, color: t.text, borderColor: t.border }]}
+        autoFocus
+        maxLength={60}
+      />
+
+      <Text style={[styles.fieldLabel, { color: t.textMuted }]}>MUSCLE GROUP</Text>
+      <View style={styles.wrapChips}>
+        {GROUPS.map((g) => (
+          <Pill key={g} label={g} active={group === g} onPress={() => setGroup(g)} />
+        ))}
+      </View>
+
+      <Text style={[styles.fieldLabel, { color: t.textMuted }]}>EQUIPMENT</Text>
+      <View style={styles.wrapChips}>
+        {EQUIPMENT.map((eq) => (
+          <Pill key={eq} label={eq} active={equipment === eq} onPress={() => pickEquipment(eq)} />
+        ))}
+      </View>
+
+      <Text style={[styles.fieldLabel, { color: t.textMuted }]}>TYPE</Text>
+      <View style={[styles.segment, { backgroundColor: t.surface2 }]}>
+        {[
+          { k: true, label: "Weighted" },
+          { k: false, label: "Bodyweight" },
+        ].map(({ k, label }) => {
+          const on = weighted === k;
+          return (
+            <TouchableOpacity
+              key={label}
+              style={[styles.segBtn, on && { backgroundColor: t.surface }]}
+              onPress={() => setWeighted(k)}
+            >
+              <Text style={{ color: on ? t.text : t.textMuted, fontWeight: "700", fontSize: 13 }}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <PressableScale
+        style={[styles.createBtn, { backgroundColor: t.primary, opacity: valid ? 1 : 0.45 }]}
+        disabled={!valid}
+        onPress={() => valid && onCreate(name.trim(), group, equipment, weighted)}
+      >
+        <PlusIcon size={18} color={t.onPrimary} />
+        <Text style={{ color: t.onPrimary, fontWeight: "800", fontSize: 15 }}>Create Exercise</Text>
+      </PressableScale>
+    </ScrollView>
   );
 }
 
@@ -166,4 +272,10 @@ const styles = StyleSheet.create({
   rowTitle: { fontWeight: "700", fontSize: 15 },
   rowSub: { fontSize: 12.5, marginTop: 2 },
   createRow: { flexDirection: "row", alignItems: "center", gap: 10, padding: 16, borderRadius: 14, borderWidth: 1, borderStyle: "dashed" },
+  fieldLabel: { fontSize: 12, fontWeight: "800", letterSpacing: 0.6, marginBottom: 8, marginTop: 16 },
+  input: { borderWidth: 1, borderRadius: 12, padding: 13, fontSize: 15, fontWeight: "600" },
+  wrapChips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  segment: { flexDirection: "row", borderRadius: 12, padding: 4, gap: 4 },
+  segBtn: { flex: 1, paddingVertical: 10, borderRadius: 9, alignItems: "center" },
+  createBtn: { flexDirection: "row", gap: 8, borderRadius: 14, paddingVertical: 15, alignItems: "center", justifyContent: "center", marginTop: 28 },
 });

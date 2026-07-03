@@ -45,15 +45,6 @@ export function PrimaryButton({ title, onPress, style, icon }: BtnProps) {
   );
 }
 
-export function GhostButton({ title, onPress, style, icon }: BtnProps) {
-  const t = useTheme();
-  return (
-    <PressableScale style={[ui.btn, { backgroundColor: t.surface2 }, style]} onPress={onPress}>
-      {icon}
-      <Text style={[ui.btnText, { color: t.text }]}>{title}</Text>
-    </PressableScale>
-  );
-}
 
 export function Pill({
   label,
