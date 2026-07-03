@@ -61,7 +61,9 @@ export function AddExerciseModal({ visible, onClose, onPick, selectedIds = [], m
             onPress={() => (creating ? setCreating(false) : onClose())}
             hitSlop={8}
           >
-            <Text style={[styles.cancel, { color: t.accent }]}>{creating ? "Back" : "Cancel"}</Text>
+            <Text style={[styles.cancel, { color: t.accent }, multi && !creating && { fontWeight: "800" }]}>
+              {creating ? "Back" : multi ? "Done" : "Cancel"}
+            </Text>
           </TouchableOpacity>
           <Text style={[styles.title, { color: t.text }]}>
             {creating ? "New Exercise" : "Add Exercise"}
@@ -104,7 +106,7 @@ export function AddExerciseModal({ visible, onClose, onPick, selectedIds = [], m
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.chips}
-              style={{ flexGrow: 0 }}
+              style={styles.chipsBar}
             >
               <Pill label="All" active={group === null} onPress={() => setGroup(null)} />
               {GROUPS.map((g) => (
@@ -266,7 +268,8 @@ const styles = StyleSheet.create({
   cancel: { fontSize: 15, fontWeight: "600" },
   search: { flexDirection: "row", alignItems: "center", gap: 8, marginHorizontal: 16, paddingHorizontal: 12, height: 44, borderRadius: 12, borderWidth: 1 },
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 0 },
-  chips: { gap: 8, paddingHorizontal: 16, paddingVertical: 12, alignItems: "center" },
+  chips: { gap: 8, paddingHorizontal: 16, alignItems: "center" },
+  chipsBar: { flexGrow: 0, height: 58 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, padding: 12, borderRadius: 14, marginBottom: 10, borderWidth: 1 },
   avatar: { width: 40, height: 40, borderRadius: 11, alignItems: "center", justifyContent: "center" },
   rowTitle: { fontWeight: "700", fontSize: 15 },

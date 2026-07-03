@@ -1,4 +1,5 @@
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { showDialog } from "../lib/dialogs";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
 import { NAV_CLEARANCE } from "../components/BottomNav";
@@ -22,7 +23,7 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
   // Never silently overwrite a running session — offer to resume it instead.
   const start = (fn: () => void) => {
     if (active) {
-      Alert.alert(
+      showDialog(
         "Workout in progress",
         "You already have a workout running. Starting a new one will replace it.",
         [
@@ -104,7 +105,7 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
                 <Text style={[styles.routineTitle, { color: t.text }]}>{r.name}</Text>
                 <TouchableOpacity
                   onPress={() =>
-                    Alert.alert("Delete routine?", `"${r.name}" will be removed.`, [
+                    showDialog("Delete routine?", `"${r.name}" will be removed.`, [
                       { text: "Cancel", style: "cancel" },
                       { text: "Delete", style: "destructive", onPress: () => deleteRoutine(r.id) },
                     ])
@@ -142,7 +143,7 @@ export function WorkoutHomeScreen({ onOpenActive, onNewRoutine }: Props) {
                 </Text>
               </View>
               <Text style={[styles.metaText, { color: t.textMuted }]}>
-                {workoutSetCount(lastWorkout)} sets
+                {workoutSetCount(lastWorkout)} set{workoutSetCount(lastWorkout) === 1 ? "" : "s"}
               </Text>
             </View>
           </Card>

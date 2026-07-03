@@ -76,7 +76,7 @@ export function ExerciseDetailScreen({ exerciseId, onClose }: Props) {
           <Empty emoji="📊" text="No data yet. Log this exercise in a workout to see your progress." />
         ) : (
           <>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.metricRow}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.metricBar} contentContainerStyle={styles.metricRow}>
               {METRICS.map((m) => (
                 <Pill key={m} label={METRIC_LABELS[m]} active={metric === m} onPress={() => setMetric(m)} />
               ))}
@@ -113,7 +113,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: "800" },
   sub: { fontSize: 12.5, marginTop: 1 },
   prBadge: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 999 },
-  metricRow: { gap: 8, paddingBottom: 12 },
+  metricRow: { gap: 8, alignItems: "center" },
+  metricBar: { flexGrow: 0, height: 48, marginBottom: 12 },
   metricTitle: { fontSize: 15, fontWeight: "800", marginBottom: 6 },
   histDate: { fontSize: 14, fontWeight: "800", marginBottom: 4 },
   setLine: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 9 },

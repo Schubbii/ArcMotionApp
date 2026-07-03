@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { showDialog } from "../lib/dialogs";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
 import { NAV_CLEARANCE } from "../components/BottomNav";
@@ -29,7 +30,7 @@ export function LibraryScreen({ onOpenActive }: Props) {
       onOpenActive();
     };
     if (active) {
-      Alert.alert(
+      showDialog(
         "Workout in progress",
         "You already have a workout running. Starting a new one will replace it.",
         [
@@ -56,7 +57,7 @@ export function LibraryScreen({ onOpenActive }: Props) {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ flexGrow: 0 }}
+        style={styles.chipsBar}
         contentContainerStyle={styles.chips}
       >
         <Pill label="All" active={goal === null} onPress={() => setGoal(null)} />
@@ -135,7 +136,8 @@ function ProgramCard({
 }
 
 const styles = StyleSheet.create({
-  chips: { gap: 8, paddingHorizontal: 16, paddingVertical: 10, alignItems: "center" },
+  chips: { gap: 8, paddingHorizontal: 16, alignItems: "center" },
+  chipsBar: { flexGrow: 0, height: 54 },
   cardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   name: { fontSize: 18, fontWeight: "900", flex: 1 },
   levelBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },

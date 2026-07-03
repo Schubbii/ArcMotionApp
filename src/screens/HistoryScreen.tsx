@@ -1,4 +1,5 @@
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { showDialog } from "../lib/dialogs";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
 import { NAV_CLEARANCE } from "../components/BottomNav";
@@ -13,7 +14,7 @@ export function HistoryScreen() {
   const unit = settings.unit;
 
   const confirmDelete = (id: string, title: string) =>
-    Alert.alert("Delete workout?", `"${title}" will be removed from your history.`, [
+    showDialog("Delete workout?", `"${title}" will be removed from your history.`, [
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: () => deleteWorkout(id) },
     ]);
@@ -48,7 +49,7 @@ export function HistoryScreen() {
                     {workoutVolume(w).toLocaleString()} {unit}
                   </Text>
                 </View>
-                <Text style={[styles.metaText, { color: t.textMuted }]}>{workoutSetCount(w)} sets</Text>
+                <Text style={[styles.metaText, { color: t.textMuted }]}>{workoutSetCount(w)} set{workoutSetCount(w) === 1 ? "" : "s"}</Text>
               </View>
 
               <View style={[styles.divider, { backgroundColor: t.border }]} />

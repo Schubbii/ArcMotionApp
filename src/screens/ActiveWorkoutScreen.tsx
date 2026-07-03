@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import {ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,  } from "react-native";
+import { showDialog } from "../lib/dialogs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
@@ -66,17 +59,17 @@ export function ActiveWorkoutScreen({ onClose }: Props) {
 
   const confirmFinish = () => {
     if (setCount === 0) {
-      Alert.alert("Nothing logged", "Complete at least one set before finishing.");
+      showDialog("Nothing logged", "Complete at least one set before finishing.");
       return;
     }
-    Alert.alert("Finish workout?", "Your completed sets will be saved.", [
+    showDialog("Finish workout?", "Your completed sets will be saved.", [
       { text: "Cancel", style: "cancel" },
       { text: "Finish", style: "default", onPress: () => { finishActive(); onClose(); } },
     ]);
   };
 
   const confirmDiscard = () => {
-    Alert.alert("Discard workout?", "This workout will not be saved.", [
+    showDialog("Discard workout?", "This workout will not be saved.", [
       { text: "Cancel", style: "cancel" },
       { text: "Discard", style: "destructive", onPress: () => { discardActive(); onClose(); } },
     ]);
