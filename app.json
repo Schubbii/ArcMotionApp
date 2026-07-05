@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "ArcMotion",
+    "slug": "arcmotion",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "arcmotion",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "backgroundColor": "#ffffff",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.arcmotion.app",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "com.arcmotion.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c9e9ac90-9ec4-48a4-b7b3-c0efbeaef836"
+      }
+    },
+    "owner": "schubbii"
+  }
+}
