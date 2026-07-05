@@ -13,7 +13,11 @@ export interface DialogAction {
  */
 export function showDialog(title: string, message: string, actions: DialogAction[] = []): void {
   if (Platform.OS !== "web") {
-    Alert.alert(title, message, actions);
+    // An empty button array renders an Android dialog with NO buttons that
+    // can never be dismissed — always provide at least an OK. cancelable lets
+    // back/outside taps close it (dismissing without a choice = cancel).
+    const buttons = actions.length > 0 ? actions : [{ text: "OK" }];
+    Alert.alert(title, message, buttons, { cancelable: true });
     return;
   }
   const primary = [...actions].reverse().find((a) => a.style !== "cancel");

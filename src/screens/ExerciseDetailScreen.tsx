@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
@@ -71,45 +71,56 @@ export function ExerciseDetailScreen({ exerciseId, onClose }: Props) {
         )}
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}>
-        {stats.length === 0 ? (
+      {/* Virtualized — a favorite exercise can have hundreds of logged days. */}
+      <FlatList
+        data={stats.length === 0 ? [] : history}
+        keyExtractor={(h) => h.id}
+        contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}
+        ListEmptyComponent={
           <Empty emoji="📊" text="No data yet. Log this exercise in a workout to see your progress." />
-        ) : (
-          <>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.metricBar} contentContainerStyle={styles.metricRow}>
-              {METRICS.map((m) => (
-                <Pill key={m} label={METRIC_LABELS[m]} active={metric === m} onPress={() => setMetric(m)} />
-              ))}
-            </ScrollView>
-
-            <Card>
-              <Text style={[styles.metricTitle, { color: t.text }]}>{METRIC_LABELS[metric]}</Text>
-              {points.length < 2 ? (
-                <Text style={{ color: t.textMuted, fontSize: 13.5, lineHeight: 20, textAlign: "center", paddingVertical: 22 }}>
-                  Latest: {points[0]?.y ?? 0}{metric === "reps" ? " reps" : ` ${unit}`}.{"\n"}Log this exercise again to see a trend line.
-                </Text>
-              ) : (
-                <LineChart points={points} height={200} markMax />
-              )}
-            </Card>
-
-            <SectionTitle>History</SectionTitle>
-            {history.map((h) => (
-              <Card key={h.id} style={{ marginBottom: 12 }}>
-                <Text style={[styles.histDate, { color: t.text }]}>{formatDateHeading(h.date)}</Text>
-                {h.sets.map((s, i) => (
-                  <View key={s.id} style={[styles.setLine, i > 0 && { borderTopColor: t.border, borderTopWidth: 1 }]}>
-                    <Text style={[styles.setIdx, { color: t.textMuted }]}>{i + 1}</Text>
-                    <Text style={[styles.setVal, { color: t.text }]}>
-                      {s.weight > 0 ? `${s.weight} ${unit} × ${s.reps}` : `${s.reps} reps`}
-                    </Text>
-                  </View>
+        }
+        ListHeaderComponent={
+          stats.length === 0 ? null : (
+            <>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.metricBar} contentContainerStyle={styles.metricRow}>
+                {METRICS.map((m) => (
+                  <Pill key={m} label={METRIC_LABELS[m]} active={metric === m} onPress={() => setMetric(m)} />
                 ))}
+              </ScrollView>
+
+              <Card>
+                <Text style={[styles.metricTitle, { color: t.text }]}>{METRIC_LABELS[metric]}</Text>
+                {points.length < 2 ? (
+                  <Text style={{ color: t.textMuted, fontSize: 13.5, lineHeight: 20, textAlign: "center", paddingVertical: 22 }}>
+                    Latest: {points[0]?.y ?? 0}{metric === "reps" ? " reps" : ` ${unit}`}.{"\n"}Log this exercise again to see a trend line.
+                  </Text>
+                ) : (
+                  <LineChart points={points} height={200} markMax />
+                )}
               </Card>
+
+              <SectionTitle>History</SectionTitle>
+            </>
+          )
+        }
+        renderItem={({ item: h }) => (
+          <Card style={{ marginBottom: 12 }}>
+            <Text style={[styles.histDate, { color: t.text }]}>{formatDateHeading(h.date)}</Text>
+            {h.sets.map((s, i) => (
+              <View key={s.id} style={[styles.setLine, i > 0 && { borderTopColor: t.border, borderTopWidth: 1 }]}>
+                <Text style={[styles.setIdx, { color: t.textMuted }]}>{i + 1}</Text>
+                <Text style={[styles.setVal, { color: t.text }]}>
+                  {s.weight > 0 ? `${s.weight} ${unit} × ${s.reps}` : `${s.reps} reps`}
+                </Text>
+              </View>
             ))}
-          </>
+          </Card>
         )}
-      </ScrollView>
+        initialNumToRender={6}
+        maxToRenderPerBatch={8}
+        windowSize={7}
+        removeClippedSubviews
+      />
     </View>
   );
 }
