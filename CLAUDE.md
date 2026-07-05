@@ -19,6 +19,9 @@ all data lives on-device (AsyncStorage), no backend, no accounts.
 - **Expo SDK 54** · React Native 0.81 · React 19.1 · TypeScript.
 - Key libs: `react-native-svg`, `@react-native-async-storage/async-storage`,
   `react-native-safe-area-context`, `expo-blur`, `expo-status-bar`, `expo-asset`.
+- Data & Backup (all bundled in Expo Go, no dev build needed): `expo-sqlite`
+  (FitNotes import), `expo-document-picker`, `expo-file-system` (we use the
+  `/legacy` string-path API), `expo-sharing`.
 - Web preview (for UX testing only): `react-dom`, `react-native-web`.
 
 ### ⚠️ SDK version is load-bearing
@@ -33,7 +36,7 @@ match dependency versions from `node_modules/expo/bundledNativeModules.json`
 ## Commands
 
 ```bash
-npm test                 # tsx self-test suite (129 assertions) — run after logic changes
+npm test                 # tsx self-test suite (161 assertions) — run after logic changes
 npx tsc --noEmit         # typecheck — must pass before committing
 npx expo start -c        # dev server for Expo Go (device testing)
 # Bundle sanity (no device needed) — the CI-substitute we rely on here:
@@ -67,6 +70,10 @@ src/
     stats.ts             volume, working-sets, day-stats, PRs, previousSets
     storage.ts           typed AsyncStorage JSON wrappers
     dialogs.ts           showDialog() — cross-platform Alert/confirm
+    backup.ts            versioned backup file format + strict parse/validate
+    fitnotes.ts          pure FitNotes(.fitnotes SQLite) → ArcMotion mapping
+    transfer.ts          file IO: export/share backup, pick+read backup or
+                         FitNotes DB (native-only; expo-sqlite via cache dir)
   components/            BottomNav, ResumeBar, Glass, GlassBackdrop, LineChart,
                          Stepper, SetRow, AddExerciseModal, ArcLogo, Icons,
                          ui (Card/Pill/buttons/etc.), motion (PressableScale,
@@ -131,9 +138,15 @@ Regeneration script lives in the scratchpad (uses `sharp`).
 - Commit as `Claude <noreply@anthropic.com>`; work on `claude/expo-mobile`.
 - Never commit the model identifier into code/commits/PRs.
 - The git remote is a proxy; if `git push` 403s transiently, retry with backoff.
-- `.fitnotes` files (user backups) are renamed SQLite DBs — see the "FitNotes
-  import" note if that feature gets built (schema explored: `training_log`,
-  `exercise`, `Category`, `Routine*` tables; weights in kg via `metric_weight`).
+- `.fitnotes` files (user backups) are renamed SQLite DBs. The import is BUILT
+  (Settings → Data & Backup): `src/lib/fitnotes.ts` maps `training_log`,
+  `exercise`, `Category`, `Routine*` rows; weights are always kg in
+  `metric_weight` (the `unit` column is display-only), `Comment.owner_type_id=1`
+  rows are per-set notes, `WorkoutTime` may be empty (no time-of-day → we anchor
+  imported workouts at local noon and estimate duration from set count, since
+  stats.ts ignores workouts without `endTs`). Import ids are deterministic
+  (`fn-…`) so re-imports replace instead of duplicate. Never commit a user's
+  real `.fitnotes` file — it's personal training data.
 
 ## Known caveats
 

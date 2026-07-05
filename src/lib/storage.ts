@@ -25,4 +25,6 @@ export const STORAGE_KEYS = {
   workouts: "arcmotion.workouts",
   active: "arcmotion.active",
   settings: "arcmotion.settings",
+  /** Safety snapshot taken right before an import/restore, for one-tap undo. */
+  snapshot: "arcmotion.snapshot",
 } as const;

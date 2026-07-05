@@ -20,7 +20,9 @@ import {
   workoutSetCount,
   workoutVolume,
 } from "../src/lib/stats";
-import type { Workout, WorkoutSet } from "../src/types";
+import type { Exercise, Workout, WorkoutSet } from "../src/types";
+import { backupFileName, parseBackup, serializeBackup, type AppSnapshot } from "../src/lib/backup";
+import { mapFitNotes, type FitNotesRaw } from "../src/lib/fitnotes";
 import { DEFAULT_EXERCISES, DEFAULT_ROUTINES } from "../src/data/exercises";
 import { PROGRAMS, PROGRAM_GOALS } from "../src/data/programs";
 import { THEMES, DEFAULT_THEME, paletteFor } from "../src/theme/themes";
@@ -131,6 +133,103 @@ for (const m of ["heaviest", "1rm", "volume", "reps"] as const) {
 }
 check("personalRecord ignores active + warmups", personalRecord(all, "bench-bb") === 107.5);
 check("personalRecord unknown exercise = 0", personalRecord(all, "nope") === 0);
+
+// ---------------------------------------------------------------- backup.ts
+console.log("backup.ts");
+const snapshot: AppSnapshot = {
+  exercises: DEFAULT_EXERCISES.slice(0, 3),
+  routines: DEFAULT_ROUTINES.slice(0, 1),
+  workouts: [w1, w2],
+  settings: { theme: "volt", unit: "kg", weightStep: 2, repStep: 1, name: "Tester" },
+};
+const roundtrip = parseBackup(serializeBackup(snapshot));
+check("backup roundtrip ok", roundtrip.ok);
+if (roundtrip.ok) {
+  check("roundtrip preserves workouts", JSON.stringify(roundtrip.data.workouts) === JSON.stringify([w1, w2]));
+  check("roundtrip preserves settings", roundtrip.data.settings.name === "Tester");
+  check("roundtrip has exportedAt", /^\d{4}-\d{2}-\d{2}T/.test(roundtrip.exportedAt));
+}
+check("rejects non-JSON", !parseBackup("hello").ok);
+check("rejects foreign JSON", !parseBackup('{"format":"other-app"}').ok);
+check("rejects future version", !parseBackup('{"format":"arcmotion-backup","version":2}').ok);
+check(
+  "rejects damaged workouts",
+  !parseBackup(serializeBackup(snapshot).replace('"startTs":1000', '"startTs":"soon"')).ok
+);
+check(
+  "rejects damaged exercises",
+  !parseBackup(JSON.stringify({ format: "arcmotion-backup", version: 1, exercises: [{ id: 5 }], routines: [], workouts: [], settings: {} })).ok
+);
+check("backupFileName", backupFileName("2026-07-05") === "arcmotion-backup-2026-07-05.json");
+
+// -------------------------------------------------------------- fitnotes.ts
+console.log("fitnotes.ts");
+const fnRaw: FitNotesRaw = {
+  categories: [
+    { _id: 1, name: "Chest" },
+    { _id: 2, name: "Triceps" },
+    { _id: 3, name: "Cardio" },
+  ],
+  exercises: [
+    { _id: 10, name: "Flat Barbell Bench Press", category_id: 1, exercise_type_id: 0 },
+    { _id: 11, name: "Rope Push Down", category_id: 2, exercise_type_id: 0 },
+    { _id: 12, name: "Bench Press (Barbell)", category_id: 1, exercise_type_id: 0 }, // matches seed
+    { _id: 13, name: "Running (Outdoor)", category_id: 3, exercise_type_id: 1 },
+    { _id: 14, name: "Unused Exercise", category_id: 1, exercise_type_id: 0 }, // never referenced
+  ],
+  logs: [
+    // day 1: two bench sets (one commented twice with same text), one triceps set
+    { _id: 100, exercise_id: 10, date: "2026-01-02", metric_weight: 80, reps: 8 },
+    { _id: 101, exercise_id: 10, date: "2026-01-02", metric_weight: 82.5, reps: 6 },
+    { _id: 102, exercise_id: 11, date: "2026-01-02", metric_weight: 25, reps: 12 },
+    // day 2: seed-matched exercise + a time-only row that must be skipped
+    { _id: 103, exercise_id: 12, date: "2026-01-04", metric_weight: 90, reps: 5 },
+    { _id: 104, exercise_id: 13, date: "2026-01-04", metric_weight: 0, reps: 0 },
+  ],
+  comments: [
+    { owner_id: 100, comment: "paused" },
+    { owner_id: 101, comment: "paused" },
+    { owner_id: 999, comment: "orphan" },
+  ],
+  routines: [{ _id: 1, name: "PPL" }],
+  sections: [
+    { _id: 5, routine_id: 1, name: "Push", sort_order: 0 },
+    { _id: 6, routine_id: 1, name: "Empty", sort_order: 1 },
+  ],
+  sectionExercises: [
+    { routine_section_id: 5, exercise_id: 11, sort_order: 1 },
+    { routine_section_id: 5, exercise_id: 10, sort_order: 0 },
+  ],
+};
+const fn = mapFitNotes(fnRaw, DEFAULT_EXERCISES);
+check("fn: one workout per day", fn.stats.workouts === 2);
+check("fn: sets counted", fn.stats.sets === 4);
+check("fn: time-only row skipped", fn.stats.skippedSets === 1);
+check("fn: unused exercise not imported", fn.newExercises.every((e) => e.name !== "Unused Exercise"));
+check("fn: seed name matched, not duplicated", fn.stats.matchedExercises === 1 && fn.newExercises.every((e) => e.name !== "Bench Press (Barbell)"));
+const fnBench = fn.newExercises.find((e) => e.name === "Flat Barbell Bench Press");
+check("fn: category → group", fnBench?.group === "Chest");
+check("fn: equipment guessed from name", fnBench?.equipment === "Barbell");
+const fnCable = fn.newExercises.find((e) => e.name === "Rope Push Down");
+check("fn: triceps → Arms, rope → Cable", fnCable?.group === "Arms" && fnCable?.equipment === "Cable");
+const day1 = fn.workouts.find((w) => w.date === "2026-01-02")!;
+const day2 = fn.workouts.find((w) => w.date === "2026-01-04")!;
+check("fn: workouts newest first", fn.workouts[0] === day2);
+check("fn: kg weights kept incl. fractions", day1.entries[0].sets[1].weight === 82.5);
+check("fn: sets marked done, not warmup", day1.entries.every((e) => e.sets.every((s) => s.done && !s.warmup)));
+check("fn: repeated comment kept once", day1.entries[0].note === "paused");
+check("fn: title from trained groups", day1.title === "Chest & Arms");
+check("fn: endTs set so stats count imports", !!day1.endTs && day1.endTs > day1.startTs);
+check("fn: matched exercise reuses seed id", day2.entries[0].exerciseId === "bench-bb");
+check("fn: deterministic workout ids", day1.id === "fn-wo-2026-01-02");
+check("fn: routine per section, empty dropped", fn.routines.length === 1);
+check("fn: routine name Routine · Section", fn.routines[0].name === "PPL · Push");
+check("fn: routine exercises in sort order", JSON.stringify(fn.routines[0].exerciseIds) === JSON.stringify(["fn-ex-10", "fn-ex-11"]));
+const fnAgain = mapFitNotes(fnRaw, [...DEFAULT_EXERCISES, ...fn.newExercises]);
+check("fn: re-import creates no new exercises", fnAgain.stats.newExercises === 0);
+check("fn: re-import keeps same ids", fnAgain.workouts[0].id === fn.workouts[0].id);
+const reBench: Exercise | undefined = [...DEFAULT_EXERCISES, ...fn.newExercises].find((e) => e.id === "fn-ex-10");
+check("fn: re-import maps logs onto prior import ids", !!reBench && fnAgain.workouts[1].entries[0].exerciseId === "fn-ex-10");
 
 // ------------------------------------------------------------ data integrity
 console.log("data integrity");

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
@@ -6,10 +7,110 @@ import { THEMES } from "../theme/themes";
 import { Card, ScreenTitle, SectionTitle } from "../components/ui";
 import { PressableScale } from "../components/motion";
 import { CheckIcon } from "../components/Icons";
+import { showDialog } from "../lib/dialogs";
+import { parseBackup } from "../lib/backup";
+import { mapFitNotes } from "../lib/fitnotes";
+import { exportBackup, pickBackupJson, pickFitNotesData } from "../lib/transfer";
 
 export function SettingsScreen() {
   const t = useTheme();
-  const { settings, setTheme, setUnit, setWeightStep, setRepStep, setName, workouts } = useAppData();
+  const {
+    settings, setTheme, setUnit, setWeightStep, setRepStep, setName, workouts,
+    exercises, exportSnapshot, restoreBackup, importFitNotes, undoTs, restoreLastSnapshot,
+  } = useAppData();
+  /** Which data action is running — rows disable while busy. */
+  const [busy, setBusy] = useState<null | "export" | "restore" | "fitnotes" | "undo">(null);
+
+  const onExport = async () => {
+    setBusy("export");
+    const res = await exportBackup(exportSnapshot());
+    setBusy(null);
+    if (!res.ok && !res.cancelled) showDialog("Export failed", res.error);
+  };
+
+  const onRestore = async () => {
+    setBusy("restore");
+    const picked = await pickBackupJson();
+    setBusy(null);
+    if (!picked.ok) {
+      if (!picked.cancelled) showDialog("Restore failed", picked.error);
+      return;
+    }
+    const parsed = parseBackup(picked.value);
+    if (!parsed.ok) {
+      showDialog("Restore failed", parsed.error);
+      return;
+    }
+    const { data } = parsed;
+    const when = parsed.exportedAt ? ` from ${parsed.exportedAt.slice(0, 10)}` : "";
+    showDialog(
+      "Restore backup?",
+      `This backup${when} holds ${data.workouts.length} workouts, ${data.exercises.length} exercises and ${data.routines.length} routines.\n\nIt will replace ALL current data (an active session is discarded). A safety snapshot is kept so you can undo.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Restore",
+          style: "destructive",
+          onPress: () => {
+            restoreBackup(data);
+            showDialog("Backup restored", "Your data has been replaced with the backup.");
+          },
+        },
+      ]
+    );
+  };
+
+  const onImportFitNotes = async () => {
+    setBusy("fitnotes");
+    const picked = await pickFitNotesData();
+    setBusy(null);
+    if (!picked.ok) {
+      if (!picked.cancelled) showDialog("Import failed", picked.error);
+      return;
+    }
+    const mapped = mapFitNotes(picked.value, exercises);
+    const s = mapped.stats;
+    if (s.workouts === 0 && s.routines === 0) {
+      showDialog("Nothing to import", "No workouts or routines were found in that file.");
+      return;
+    }
+    const skipped = s.skippedSets > 0 ? `\nSkipped: ${s.skippedSets} time/distance-only sets.` : "";
+    showDialog(
+      "Import FitNotes data?",
+      `Found ${s.workouts} workouts (${s.sets} sets), ${s.newExercises} new exercises (${s.matchedExercises} matched existing) and ${s.routines} routines.${skipped}\n\nExisting ArcMotion data is kept; importing the same file again won't duplicate. A safety snapshot lets you undo.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Import",
+          onPress: () => {
+            importFitNotes(mapped);
+            showDialog("Import complete", `${s.workouts} workouts and ${s.routines} routines are now in ArcMotion.`);
+          },
+        },
+      ]
+    );
+  };
+
+  const onUndo = () => {
+    if (!undoTs) return;
+    showDialog(
+      "Undo last import/restore?",
+      `This rolls everything back to ${new Date(undoTs).toLocaleString()}, right before the last import or restore.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Roll back",
+          style: "destructive",
+          onPress: async () => {
+            setBusy("undo");
+            const ok = await restoreLastSnapshot();
+            setBusy(null);
+            showDialog(ok ? "Rolled back" : "Undo failed", ok ? "Your previous data is back." : "The snapshot could not be loaded.");
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -98,6 +199,43 @@ export function SettingsScreen() {
           <StepControl label="Reps step" value={settings.repStep} step={1} onChange={setRepStep} />
         </Card>
 
+        <SectionTitle>Data & Backup</SectionTitle>
+        <Text style={{ color: t.textMuted, fontSize: 13, marginHorizontal: 4, marginBottom: 12 }}>
+          Your data lives only on this device — export a backup now and then.
+        </Text>
+        <Card>
+          <DataRow
+            title={busy === "export" ? "Exporting…" : "Export backup"}
+            sub="Save all workouts, routines & settings as a file"
+            disabled={busy !== null}
+            onPress={onExport}
+          />
+          <DataRow
+            title={busy === "restore" ? "Opening…" : "Restore from backup"}
+            sub="Replace current data with an ArcMotion backup file"
+            disabled={busy !== null}
+            onPress={onRestore}
+            separated
+          />
+          <DataRow
+            title={busy === "fitnotes" ? "Reading…" : "Import from FitNotes"}
+            sub="Bring your history over from a .fitnotes backup"
+            disabled={busy !== null}
+            onPress={onImportFitNotes}
+            separated
+          />
+          {undoTs !== null && (
+            <DataRow
+              title={busy === "undo" ? "Rolling back…" : "Undo last import/restore"}
+              sub={`Back to the state from ${new Date(undoTs).toLocaleString()}`}
+              disabled={busy !== null}
+              onPress={onUndo}
+              destructive
+              separated
+            />
+          )}
+        </Card>
+
         <SectionTitle>How It Works</SectionTitle>
         <Card>
           {[
@@ -125,6 +263,37 @@ export function SettingsScreen() {
         </Card>
       </ScrollView>
     </View>
+  );
+}
+
+function DataRow({
+  title,
+  sub,
+  onPress,
+  disabled = false,
+  destructive = false,
+  separated = false,
+}: {
+  title: string;
+  sub: string;
+  onPress: () => void;
+  disabled?: boolean;
+  destructive?: boolean;
+  separated?: boolean;
+}) {
+  const t = useTheme();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled}
+      style={[styles.dataRow, separated && { borderTopWidth: 1, borderTopColor: t.border }, disabled && { opacity: 0.5 }]}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: destructive ? t.danger : t.text, fontWeight: "700", fontSize: 15 }}>{title}</Text>
+        <Text style={{ color: t.textMuted, fontSize: 12.5, marginTop: 2, lineHeight: 17 }}>{sub}</Text>
+      </View>
+      <Text style={{ color: t.textMuted, fontSize: 18, fontWeight: "600" }}>›</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -189,4 +358,5 @@ const styles = StyleSheet.create({
   stepInput: { width: 56, height: 40, borderRadius: 10, fontSize: 16, fontWeight: "800", textAlign: "center" },
   nameInput: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, fontWeight: "600" },
   tipRow: { flexDirection: "row", gap: 8, paddingVertical: 10 },
+  dataRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12 },
 });

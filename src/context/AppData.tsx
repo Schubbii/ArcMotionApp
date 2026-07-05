@@ -23,6 +23,14 @@ import { DEFAULT_THEME } from "../theme/themes";
 import { loadJSON, saveJSON, STORAGE_KEYS } from "../lib/storage";
 import { previousSets } from "../lib/stats";
 import { todayISO, uid } from "../lib/format";
+import type { AppSnapshot } from "../lib/backup";
+import type { FitNotesImport } from "../lib/fitnotes";
+
+/** Everything needed to fully roll the app back, including the live session. */
+interface SafetySnapshot extends AppSnapshot {
+  ts: number;
+  active: Workout | null;
+}
 
 interface AppDataValue {
   ready: boolean;
@@ -61,6 +69,18 @@ interface AppDataValue {
   setWeightStep: (n: number) => void;
   setRepStep: (n: number) => void;
   setName: (name: string) => void;
+
+  // backup / import (Settings → Data & Backup)
+  /** Current user data, as written into an exported backup file. */
+  exportSnapshot: () => AppSnapshot;
+  /** Replace all data with a backup's contents (takes a safety snapshot first). */
+  restoreBackup: (data: AppSnapshot) => void;
+  /** Merge a mapped FitNotes import (takes a safety snapshot first). */
+  importFitNotes: (data: FitNotesImport) => void;
+  /** When set, an undo snapshot from before the last import/restore exists. */
+  undoTs: number | null;
+  /** Roll back to the state captured right before the last import/restore. */
+  restoreLastSnapshot: () => Promise<boolean>;
 }
 
 const Ctx = createContext<AppDataValue | null>(null);
@@ -79,17 +99,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [active, setActive] = useState<Workout | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [undoTs, setUndoTs] = useState<number | null>(null);
   const loaded = useRef(false);
 
   // Hydrate once.
   useEffect(() => {
     (async () => {
-      const [ex, ro, wo, ac, se] = await Promise.all([
+      const [ex, ro, wo, ac, se, snap] = await Promise.all([
         loadJSON(STORAGE_KEYS.exercises, DEFAULT_EXERCISES),
         loadJSON(STORAGE_KEYS.routines, DEFAULT_ROUTINES),
         loadJSON(STORAGE_KEYS.workouts, [] as Workout[]),
         loadJSON<Workout | null>(STORAGE_KEYS.active, null),
         loadJSON(STORAGE_KEYS.settings, DEFAULT_SETTINGS),
+        loadJSON<SafetySnapshot | null>(STORAGE_KEYS.snapshot, null),
       ]);
       // Merge new default exercises into stored lists so existing installs
       // gain library additions without losing user-created exercises.
@@ -101,6 +123,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setActive(ac);
       // Merge with defaults so settings saved by older versions gain new fields.
       setSettings({ ...DEFAULT_SETTINGS, ...se });
+      setUndoTs(snap?.ts ?? null);
       loaded.current = true;
       setReady(true);
     })();
@@ -140,6 +163,24 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppDataValue>(() => {
     const patchActive = (fn: (w: Workout) => Workout) =>
       setActive((cur) => (cur ? fn(cur) : cur));
+
+    // Capture the full current state so an import/restore can be undone.
+    const takeSafetySnapshot = () => {
+      const ts = Date.now();
+      const snap: SafetySnapshot = { ts, exercises, routines, workouts, settings, active };
+      saveJSON(STORAGE_KEYS.snapshot, snap);
+      setUndoTs(ts);
+    };
+
+    const newestFirst = (list: Workout[]) =>
+      [...list].sort((a, b) => b.date.localeCompare(a.date) || (b.startTs ?? 0) - (a.startTs ?? 0));
+
+    /** Replace-by-id then append — deterministic import ids make re-imports idempotent. */
+    const upsert = <T extends { id: string }>(prev: T[], incoming: T[]): T[] => {
+      const byId = new Map(incoming.map((x) => [x.id, x]));
+      const have = new Set(prev.map((x) => x.id));
+      return [...prev.map((x) => byId.get(x.id) ?? x), ...incoming.filter((x) => !have.has(x.id))];
+    };
 
     const patchEntry = (entryId: string, fn: (e: Workout["entries"][number]) => Workout["entries"][number]) =>
       patchActive((w) => ({
@@ -248,8 +289,40 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setWeightStep: (n) => setSettings((p) => ({ ...p, weightStep: Math.max(0.1, n) })),
       setRepStep: (n) => setSettings((p) => ({ ...p, repStep: Math.max(1, Math.round(n)) })),
       setName: (name) => setSettings((p) => ({ ...p, name: name.slice(0, 40) })),
+
+      exportSnapshot: () => ({ exercises, routines, workouts, settings }),
+      restoreBackup: (data) => {
+        takeSafetySnapshot();
+        // Same merges as hydrate, so a backup from an older app version still
+        // gains new default exercises and settings fields.
+        const have = new Set(data.exercises.map((e) => e.id));
+        setExercises([...data.exercises, ...DEFAULT_EXERCISES.filter((d) => !have.has(d.id))]);
+        setRoutines(data.routines);
+        setWorkouts(newestFirst(data.workouts));
+        setSettings({ ...DEFAULT_SETTINGS, ...data.settings });
+        setActive(null); // the restored state replaces the world, live session included
+      },
+      importFitNotes: (data) => {
+        takeSafetySnapshot();
+        setExercises((prev) => upsert(prev, data.newExercises));
+        setWorkouts((prev) => newestFirst(upsert(prev, data.workouts)));
+        setRoutines((prev) => upsert(prev, data.routines));
+      },
+      undoTs,
+      restoreLastSnapshot: async () => {
+        const snap = await loadJSON<SafetySnapshot | null>(STORAGE_KEYS.snapshot, null);
+        if (!snap) return false;
+        setExercises(snap.exercises);
+        setRoutines(snap.routines);
+        setWorkouts(snap.workouts);
+        setSettings({ ...DEFAULT_SETTINGS, ...snap.settings });
+        setActive(snap.active);
+        saveJSON(STORAGE_KEYS.snapshot, null);
+        setUndoTs(null);
+        return true;
+      },
     };
-  }, [ready, exercises, routines, workouts, active, settings, exerciseById, buildEntry]);
+  }, [ready, exercises, routines, workouts, active, settings, undoTs, exerciseById, buildEntry]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
