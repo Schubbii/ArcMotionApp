@@ -18,6 +18,9 @@ import { ProgressScreen } from "./src/screens/ProgressScreen";
 import { ExerciseDetailScreen } from "./src/screens/ExerciseDetailScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { OnboardingScreen } from "./src/screens/OnboardingScreen";
+import { PlanDetailScreen } from "./src/screens/PlanDetailScreen";
+import { WorkoutDetailScreen } from "./src/screens/WorkoutDetailScreen";
+import { CalendarScreen } from "./src/screens/CalendarScreen";
 
 export default function App() {
   return (
@@ -34,7 +37,18 @@ type Route =
   | { name: "tabs" }
   | { name: "active" }
   | { name: "newRoutine" }
-  | { name: "exercise"; id: string };
+  | { name: "exercise"; id: string; fromWorkoutId?: string }
+  | { name: "plan"; id: string }
+  | { name: "program"; id: string }
+  | { name: "workout"; id: string; fromCalendar?: boolean }
+  | { name: "calendar" };
+
+/** Where "back" leads from a pushed route (one level up, then the tabs). */
+function backRoute(route: Route): Route {
+  if (route.name === "exercise" && route.fromWorkoutId) return { name: "workout", id: route.fromWorkoutId };
+  if (route.name === "workout" && route.fromCalendar) return { name: "calendar" };
+  return { name: "tabs" };
+}
 
 function Themed() {
   const { settings, ready } = useAppData();
@@ -67,9 +81,9 @@ function Router() {
   // goes "up" through the app instead of immediately closing it.
   useEffect(() => {
     const onBack = () => {
-      // On a pushed full-screen route → return to the tabs.
+      // On a pushed full-screen route → go one level up.
       if (route.name !== "tabs") {
-        setRoute({ name: "tabs" });
+        setRoute(backRoute(route));
         return true;
       }
       // On a secondary tab → go back to the Workout home tab.
@@ -103,7 +117,40 @@ function Router() {
   if (route.name === "exercise") {
     return (
       <FadeSlideIn key={`exercise-${route.id}`}>
-        <ExerciseDetailScreen exerciseId={route.id} onClose={() => setRoute({ name: "tabs" })} />
+        <ExerciseDetailScreen exerciseId={route.id} onClose={() => setRoute(backRoute(route))} />
+      </FadeSlideIn>
+    );
+  }
+  if (route.name === "plan" || route.name === "program") {
+    return (
+      <FadeSlideIn key={`${route.name}-${route.id}`}>
+        <PlanDetailScreen
+          planId={route.name === "plan" ? route.id : undefined}
+          programId={route.name === "program" ? route.id : undefined}
+          onClose={() => setRoute({ name: "tabs" })}
+          onOpenActive={() => setRoute({ name: "active" })}
+        />
+      </FadeSlideIn>
+    );
+  }
+  if (route.name === "workout") {
+    return (
+      <FadeSlideIn key={`workout-${route.id}`}>
+        <WorkoutDetailScreen
+          workoutId={route.id}
+          onClose={() => setRoute(backRoute(route))}
+          onOpenExercise={(id) => setRoute({ name: "exercise", id, fromWorkoutId: route.id })}
+        />
+      </FadeSlideIn>
+    );
+  }
+  if (route.name === "calendar") {
+    return (
+      <FadeSlideIn key="calendar">
+        <CalendarScreen
+          onClose={() => setRoute({ name: "tabs" })}
+          onOpenWorkout={(id) => setRoute({ name: "workout", id, fromCalendar: true })}
+        />
       </FadeSlideIn>
     );
   }
@@ -117,8 +164,19 @@ function Router() {
             onNewRoutine={() => setRoute({ name: "newRoutine" })}
           />
         )}
-        {tab === "library" && <LibraryScreen onOpenActive={() => setRoute({ name: "active" })} />}
-        {tab === "history" && <HistoryScreen />}
+        {tab === "library" && (
+          <LibraryScreen
+            onOpenActive={() => setRoute({ name: "active" })}
+            onOpenPlan={(id) => setRoute({ name: "plan", id })}
+            onOpenProgram={(id) => setRoute({ name: "program", id })}
+          />
+        )}
+        {tab === "history" && (
+          <HistoryScreen
+            onOpenWorkout={(id) => setRoute({ name: "workout", id })}
+            onOpenCalendar={() => setRoute({ name: "calendar" })}
+          />
+        )}
         {tab === "progress" && (
           <ProgressScreen onOpenExercise={(id) => setRoute({ name: "exercise", id })} />
         )}

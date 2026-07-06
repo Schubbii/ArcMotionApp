@@ -36,7 +36,7 @@ match dependency versions from `node_modules/expo/bundledNativeModules.json`
 ## Commands
 
 ```bash
-npm test                 # tsx self-test suite (161 assertions) — run after logic changes
+npm test                 # tsx self-test suite (185 assertions) — run after logic changes
 npx tsc --noEmit         # typecheck — must pass before committing
 npx expo start -c        # dev server for Expo Go (device testing)
 # Bundle sanity (no device needed) — the CI-substitute we rely on here:
@@ -74,12 +74,16 @@ src/
     fitnotes.ts          pure FitNotes(.fitnotes SQLite) → ArcMotion mapping
     transfer.ts          file IO: export/share backup, pick+read backup or
                          FitNotes DB (native-only; expo-sqlite via cache dir)
+    plans.ts             Plan merge + legacy flat-routine → Plan migration
+    calendar.ts          month-grid math + trained-groups-per-day for Calendar
   components/            BottomNav, ResumeBar, Glass, GlassBackdrop, LineChart,
                          Stepper, SetRow, AddExerciseModal, ArcLogo, Icons,
                          ui (Card/Pill/buttons/etc.), motion (PressableScale,
                          FadeSlideIn)
   screens/               WorkoutHome, ActiveWorkout, NewRoutine, Library,
-                         History, Progress, ExerciseDetail, Settings, Onboarding
+                         PlanDetail (plan/program preview + start day),
+                         History, WorkoutDetail, Calendar, Progress,
+                         ExerciseDetail, Settings, Onboarding
 scripts/selftest.ts      the `npm test` suite
 docs/UX_REPORT.md        browser UX walkthrough + status of all findings
 ```
@@ -140,7 +144,9 @@ Regeneration script lives in the scratchpad (uses `sharp`).
 - The git remote is a proxy; if `git push` 403s transiently, retry with backoff.
 - `.fitnotes` files (user backups) are renamed SQLite DBs. The import is BUILT
   (Settings → Data & Backup): `src/lib/fitnotes.ts` maps `training_log`,
-  `exercise`, `Category`, `Routine*` rows; weights are always kg in
+  `exercise`, `Category`, `Routine*` rows. FitNotes routines become Library
+  **Plans** (`Plan` in types.ts) whose sections are startable days — never
+  flatten them back into standalone routines. Weights are always kg in
   `metric_weight` (the `unit` column is display-only), `Comment.owner_type_id=1`
   rows are per-set notes, `WorkoutTime` may be empty (no time-of-day → we anchor
   imported workouts at local noon and estimate duration from set count, since

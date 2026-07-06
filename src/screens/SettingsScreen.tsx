@@ -43,9 +43,10 @@ export function SettingsScreen() {
     }
     const { data } = parsed;
     const when = parsed.exportedAt ? ` from ${parsed.exportedAt.slice(0, 10)}` : "";
+    const planCount = (data.plans?.length ?? 0) + data.routines.filter((r) => r.id.startsWith("fn-rt-")).length;
     showDialog(
       "Restore backup?",
-      `This backup${when} holds ${data.workouts.length} workouts, ${data.exercises.length} exercises and ${data.routines.length} routines.\n\nIt will replace ALL current data (an active session is discarded). A safety snapshot is kept so you can undo.`,
+      `This backup${when} holds ${data.workouts.length} workouts, ${data.exercises.length} exercises and ${planCount} plans.\n\nIt will replace ALL current data (an active session is discarded). A safety snapshot is kept so you can undo.`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -70,21 +71,24 @@ export function SettingsScreen() {
     }
     const mapped = mapFitNotes(picked.value, exercises);
     const s = mapped.stats;
-    if (s.workouts === 0 && s.routines === 0) {
-      showDialog("Nothing to import", "No workouts or routines were found in that file.");
+    if (s.workouts === 0 && s.plans === 0) {
+      showDialog("Nothing to import", "No workouts or plans were found in that file.");
       return;
     }
     const skipped = s.skippedSets > 0 ? `\nSkipped: ${s.skippedSets} time/distance-only sets.` : "";
     showDialog(
       "Import FitNotes data?",
-      `Found ${s.workouts} workouts (${s.sets} sets), ${s.newExercises} new exercises (${s.matchedExercises} matched existing) and ${s.routines} routines.${skipped}\n\nExisting ArcMotion data is kept; importing the same file again won't duplicate. A safety snapshot lets you undo.`,
+      `Found ${s.workouts} workouts (${s.sets} sets), ${s.newExercises} new exercises (${s.matchedExercises} matched existing) and ${s.plans} plans with ${s.planDays} days.${skipped}\n\nExisting ArcMotion data is kept; importing the same file again won't duplicate. A safety snapshot lets you undo.`,
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Import",
           onPress: () => {
             importFitNotes(mapped);
-            showDialog("Import complete", `${s.workouts} workouts and ${s.routines} routines are now in ArcMotion.`);
+            showDialog(
+              "Import complete",
+              `${s.workouts} workouts are in your History and ${s.plans} plans are in the Library.`
+            );
           },
         },
       ]

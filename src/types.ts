@@ -62,6 +62,23 @@ export interface Routine {
   exerciseIds: string[];
 }
 
+/** One startable session inside a Plan (FitNotes: "routine section"). */
+export interface PlanDay {
+  id: string;
+  name: string;
+  exerciseIds: string[];
+}
+
+/**
+ * A multi-day training plan shown in the Library (FitNotes: "routine").
+ * E.g. "PPLU" with days "Dienstag - Pull", "Mittwoch - Legs", …
+ */
+export interface Plan {
+  id: string;
+  name: string;
+  days: PlanDay[];
+}
+
 export type ThemeId =
   | "volt"
   | "ocean"

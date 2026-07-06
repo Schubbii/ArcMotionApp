@@ -5,12 +5,18 @@ import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
 import { NAV_CLEARANCE } from "../components/BottomNav";
 import { Card, Empty, ScreenTitle } from "../components/ui";
-import { ClockIcon, FlameIcon, TrashIcon } from "../components/Icons";
+import { CalendarIcon, ClockIcon, FlameIcon, TrashIcon } from "../components/Icons";
 import { formatDateHeading, formatDuration } from "../lib/format";
 import { workingSets, workoutVolume, workoutSetCount } from "../lib/stats";
 import type { Workout } from "../types";
 
-export function HistoryScreen() {
+interface Props {
+  onOpenWorkout: (id: string) => void;
+  onOpenCalendar: () => void;
+}
+
+export function HistoryScreen({ onOpenWorkout, onOpenCalendar }: Props) {
+  const t = useTheme();
   const { workouts, exercises, settings, deleteWorkout } = useAppData();
   const unit = settings.unit;
 
@@ -28,13 +34,25 @@ export function HistoryScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScreenTitle title="History" sub={`${workouts.length} workout${workouts.length === 1 ? "" : "s"}`} />
+      <ScreenTitle
+        title="History"
+        sub={`${workouts.length} workout${workouts.length === 1 ? "" : "s"}`}
+        right={
+          <TouchableOpacity
+            onPress={onOpenCalendar}
+            hitSlop={8}
+            style={[styles.calBtn, { backgroundColor: t.surface2 }]}
+          >
+            <CalendarIcon size={20} color={t.text} />
+          </TouchableOpacity>
+        }
+      />
       {/* Virtualized — imported histories can hold hundreds of workouts. */}
       <FlatList
         data={workouts}
         keyExtractor={(w) => w.id}
         renderItem={({ item }) => (
-          <HistoryCard w={item} unit={unit} nameById={nameById} onDelete={confirmDelete} />
+          <HistoryCard w={item} unit={unit} nameById={nameById} onDelete={confirmDelete} onOpen={onOpenWorkout} />
         )}
         contentContainerStyle={{ padding: 16, paddingBottom: NAV_CLEARANCE }}
         ListEmptyComponent={
@@ -54,15 +72,18 @@ const HistoryCard = memo(function HistoryCard({
   unit,
   nameById,
   onDelete,
+  onOpen,
 }: {
   w: Workout;
   unit: string;
   nameById: Map<string, string>;
   onDelete: (id: string, title: string) => void;
+  onOpen: (id: string) => void;
 }) {
   const t = useTheme();
   const setCount = workoutSetCount(w);
   return (
+    <TouchableOpacity activeOpacity={0.85} onPress={() => onOpen(w.id)}>
     <Card style={{ marginBottom: 12 }}>
       <View style={styles.cardTop}>
         <Text style={[styles.title, { color: t.text }]}>{w.title}</Text>
@@ -110,6 +131,7 @@ const HistoryCard = memo(function HistoryCard({
         );
       })}
     </Card>
+    </TouchableOpacity>
   );
 });
 
@@ -124,4 +146,5 @@ const styles = StyleSheet.create({
   exRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 4 },
   exName: { fontSize: 14, fontWeight: "600", flex: 1, marginRight: 10 },
   exBest: { fontSize: 13, fontWeight: "600" },
+  calBtn: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
 });

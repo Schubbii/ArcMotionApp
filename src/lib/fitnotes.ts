@@ -1,4 +1,4 @@
-import type { Equipment, Exercise, MuscleGroup, Routine, Workout, WorkoutEntry } from "../types";
+import type { Equipment, Exercise, MuscleGroup, Plan, Workout, WorkoutEntry } from "../types";
 
 /**
  * FitNotes (.fitnotes) import — pure mapping layer.
@@ -66,13 +66,15 @@ export interface FitNotesImport {
   /** Newly created exercises (existing name matches are reused, not duplicated). */
   newExercises: Exercise[];
   workouts: Workout[];
-  routines: Routine[];
+  /** FitNotes routines become Library plans, their sections become plan days. */
+  plans: Plan[];
   stats: {
     workouts: number;
     sets: number;
     newExercises: number;
     matchedExercises: number;
-    routines: number;
+    plans: number;
+    planDays: number;
     notes: number;
     skippedSets: number;
   };
@@ -235,35 +237,42 @@ export function mapFitNotes(raw: FitNotesRaw, existingExercises: Exercise[]): Fi
   }
   workouts.sort((a, b) => b.date.localeCompare(a.date)); // newest first, like the app stores them
 
-  // Each FitNotes routine *section* ("Push 1") is what you actually start as a
-  // session, so each becomes one ArcMotion routine.
-  const routineName = new Map(raw.routines.map((r) => [r._id, r.name]));
-  const routines: Routine[] = [];
+  // A FitNotes routine ("PPLU") becomes one Library plan; its sections
+  // ("Dienstag - Pull") become the plan's startable days.
+  const plansById = new Map<number, Plan>();
+  for (const r of raw.routines) {
+    const name = cap(r.name, 60);
+    if (name) plansById.set(r._id, { id: `fn-pl-${r._id}`, name, days: [] });
+  }
   const sections = [...raw.sections].sort(
     (a, b) => a.routine_id - b.routine_id || a.sort_order - b.sort_order
   );
+  let planDays = 0;
   for (const s of sections) {
-    const parent = routineName.get(s.routine_id);
-    if (!parent) continue;
+    const plan = plansById.get(s.routine_id);
+    if (!plan) continue;
     const exerciseIds = [...raw.sectionExercises]
       .filter((se) => se.routine_section_id === s._id)
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((se) => idMap.get(se.exercise_id))
       .filter((id): id is string => !!id);
     if (exerciseIds.length === 0) continue;
-    routines.push({ id: `fn-rt-${s._id}`, name: cap(`${parent} · ${s.name}`, 60), exerciseIds });
+    plan.days.push({ id: `fn-rt-${s._id}`, name: cap(s.name, 60), exerciseIds });
+    planDays++;
   }
+  const plans = [...plansById.values()].filter((p) => p.days.length > 0);
 
   return {
     newExercises,
     workouts,
-    routines,
+    plans,
     stats: {
       workouts: workouts.length,
       sets: totalSets,
       newExercises: newExercises.length,
       matchedExercises,
-      routines: routines.length,
+      plans: plans.length,
+      planDays,
       notes,
       skippedSets,
     },

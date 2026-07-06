@@ -22,6 +22,7 @@ export async function saveJSON<T>(key: string, value: T): Promise<void> {
 export const STORAGE_KEYS = {
   exercises: "arcmotion.exercises",
   routines: "arcmotion.routines",
+  plans: "arcmotion.plans",
   workouts: "arcmotion.workouts",
   active: "arcmotion.active",
   settings: "arcmotion.settings",

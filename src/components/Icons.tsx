@@ -178,3 +178,14 @@ export function FlameIcon(p: IconProps) {
     </Base>
   );
 }
+
+export function CalendarIcon(p: IconProps) {
+  return (
+    <Base {...p}>
+      <Rect {...s} x="3" y="4" width="18" height="18" rx="2" />
+      <Path {...s} d="M16 2v4" />
+      <Path {...s} d="M8 2v4" />
+      <Path {...s} d="M3 10h18" />
+    </Base>
+  );
+}

@@ -5,17 +5,19 @@ import { useAppData } from "../context/AppData";
 import { useTheme } from "../theme/ThemeContext";
 import { NAV_CLEARANCE } from "../components/BottomNav";
 import { PROGRAMS, PROGRAM_GOALS, type Program, type ProgramGoal } from "../data/programs";
-import { Card, Pill, ScreenTitle } from "../components/ui";
+import { Card, Pill, ScreenTitle, SectionTitle } from "../components/ui";
 import { PressableScale } from "../components/motion";
-import { CheckIcon, PlusIcon } from "../components/Icons";
+import { CheckIcon, ChevronRight, PlusIcon } from "../components/Icons";
 
 interface Props {
   onOpenActive: () => void;
+  onOpenPlan: (id: string) => void;
+  onOpenProgram: (id: string) => void;
 }
 
-export function LibraryScreen({ onOpenActive }: Props) {
+export function LibraryScreen({ onOpenActive, onOpenPlan, onOpenProgram }: Props) {
   const t = useTheme();
-  const { active, routines, startWorkoutWith, createRoutine } = useAppData();
+  const { active, routines, plans, startWorkoutWith, createRoutine } = useAppData();
   const [goal, setGoal] = useState<ProgramGoal | null>(null);
   const [savedIds, setSavedIds] = useState<string[]>([]);
 
@@ -52,26 +54,53 @@ export function LibraryScreen({ onOpenActive }: Props) {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScreenTitle title="Library" sub="Prebuilt workouts for every goal" />
+      <ScreenTitle title="Library" sub="Your plans & prebuilt workouts" />
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.chipsBar}
-        contentContainerStyle={styles.chips}
-      >
-        <Pill label="All" active={goal === null} onPress={() => setGoal(null)} />
-        {PROGRAM_GOALS.map((g) => (
-          <Pill key={g} label={g} active={goal === g} onPress={() => setGoal(goal === g ? null : g)} />
-        ))}
-      </ScrollView>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: NAV_CLEARANCE }}>
+        {plans.length > 0 && (
+          <>
+            <SectionTitle>My Plans</SectionTitle>
+            {plans.map((p) => {
+              const exCount = p.days.reduce((n, d) => n + d.exerciseIds.length, 0);
+              return (
+                <PressableScale key={p.id} scaleTo={0.97} onPress={() => onOpenPlan(p.id)}>
+                  <Card style={{ ...styles.planCard }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.name, { color: t.text }]} numberOfLines={1}>{p.name}</Text>
+                      <Text style={[styles.planSub, { color: t.textMuted }]}>
+                        {p.days.length} day{p.days.length === 1 ? "" : "s"} · {exCount} exercises
+                      </Text>
+                      <Text style={[styles.planDays, { color: t.textFaint }]} numberOfLines={1}>
+                        {p.days.map((d) => d.name).join(" · ")}
+                      </Text>
+                    </View>
+                    <ChevronRight color={t.textFaint} />
+                  </Card>
+                </PressableScale>
+              );
+            })}
+          </>
+        )}
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: NAV_CLEARANCE }}>
+        <SectionTitle>Templates</SectionTitle>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.chipsBar}
+          contentContainerStyle={styles.chips}
+        >
+          <Pill label="All" active={goal === null} onPress={() => setGoal(null)} />
+          {PROGRAM_GOALS.map((g) => (
+            <Pill key={g} label={g} active={goal === g} onPress={() => setGoal(goal === g ? null : g)} />
+          ))}
+        </ScrollView>
+
         {visible.map((p) => (
           <ProgramCard
             key={p.id}
             program={p}
             saved={savedIds.includes(p.id) || routines.some((r) => r.name === p.name)}
+            onOpen={() => onOpenProgram(p.id)}
             onStart={() => startProgram(p)}
             onSave={() => saveProgram(p)}
           />
@@ -84,11 +113,13 @@ export function LibraryScreen({ onOpenActive }: Props) {
 function ProgramCard({
   program,
   saved,
+  onOpen,
   onStart,
   onSave,
 }: {
   program: Program;
   saved: boolean;
+  onOpen: () => void;
   onStart: () => void;
   onSave: () => void;
 }) {
@@ -100,6 +131,7 @@ function ProgramCard({
     .join(" · ");
 
   return (
+    <TouchableOpacity activeOpacity={0.85} onPress={onOpen}>
     <Card style={{ marginBottom: 14 }}>
       <View style={styles.cardTop}>
         <Text style={[styles.name, { color: t.text }]}>{program.name}</Text>
@@ -134,12 +166,16 @@ function ProgramCard({
         </PressableScale>
       </View>
     </Card>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  chips: { gap: 8, paddingHorizontal: 16, alignItems: "center" },
+  chips: { gap: 8, alignItems: "center" },
   chipsBar: { flexGrow: 0, height: 54 },
+  planCard: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 },
+  planSub: { fontSize: 12.5, marginTop: 2, fontWeight: "600" },
+  planDays: { fontSize: 12, marginTop: 4 },
   cardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   name: { fontSize: 18, fontWeight: "900", flex: 1 },
   levelBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },

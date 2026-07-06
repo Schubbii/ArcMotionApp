@@ -23,6 +23,8 @@ import {
 import type { Exercise, Workout, WorkoutSet } from "../src/types";
 import { backupFileName, parseBackup, serializeBackup, type AppSnapshot } from "../src/lib/backup";
 import { mapFitNotes, type FitNotesRaw } from "../src/lib/fitnotes";
+import { mergePlans, splitLegacyImportRoutines } from "../src/lib/plans";
+import { calendarDays, isoDate, monthGrid, monthLabel, shiftMonth } from "../src/lib/calendar";
 import { DEFAULT_EXERCISES, DEFAULT_ROUTINES } from "../src/data/exercises";
 import { PROGRAMS, PROGRAM_GOALS } from "../src/data/programs";
 import { THEMES, DEFAULT_THEME, paletteFor } from "../src/theme/themes";
@@ -139,6 +141,7 @@ console.log("backup.ts");
 const snapshot: AppSnapshot = {
   exercises: DEFAULT_EXERCISES.slice(0, 3),
   routines: DEFAULT_ROUTINES.slice(0, 1),
+  plans: [{ id: "pl1", name: "PPLU", days: [{ id: "d1", name: "Push", exerciseIds: ["bench-bb"] }] }],
   workouts: [w1, w2],
   settings: { theme: "volt", unit: "kg", weightStep: 2, repStep: 1, name: "Tester" },
 };
@@ -147,8 +150,18 @@ check("backup roundtrip ok", roundtrip.ok);
 if (roundtrip.ok) {
   check("roundtrip preserves workouts", JSON.stringify(roundtrip.data.workouts) === JSON.stringify([w1, w2]));
   check("roundtrip preserves settings", roundtrip.data.settings.name === "Tester");
+  check("roundtrip preserves plans", JSON.stringify(roundtrip.data.plans) === JSON.stringify(snapshot.plans));
   check("roundtrip has exportedAt", /^\d{4}-\d{2}-\d{2}T/.test(roundtrip.exportedAt));
 }
+// Backups written before plans existed simply lack the field.
+const legacyBackup = JSON.parse(serializeBackup(snapshot));
+delete legacyBackup.plans;
+const legacyParsed = parseBackup(JSON.stringify(legacyBackup));
+check("old backup without plans accepted", legacyParsed.ok && legacyParsed.data.plans.length === 0);
+check(
+  "rejects damaged plans",
+  !parseBackup(serializeBackup(snapshot).replace('"days":[', '"days":[5,')).ok
+);
 check("rejects non-JSON", !parseBackup("hello").ok);
 check("rejects foreign JSON", !parseBackup('{"format":"other-app"}').ok);
 check("rejects future version", !parseBackup('{"format":"arcmotion-backup","version":2}').ok);
@@ -222,14 +235,53 @@ check("fn: title from trained groups", day1.title === "Chest & Arms");
 check("fn: endTs set so stats count imports", !!day1.endTs && day1.endTs > day1.startTs);
 check("fn: matched exercise reuses seed id", day2.entries[0].exerciseId === "bench-bb");
 check("fn: deterministic workout ids", day1.id === "fn-wo-2026-01-02");
-check("fn: routine per section, empty dropped", fn.routines.length === 1);
-check("fn: routine name Routine · Section", fn.routines[0].name === "PPL · Push");
-check("fn: routine exercises in sort order", JSON.stringify(fn.routines[0].exerciseIds) === JSON.stringify(["fn-ex-10", "fn-ex-11"]));
+check("fn: one plan per routine", fn.plans.length === 1 && fn.stats.plans === 1);
+check("fn: plan named like FitNotes routine", fn.plans[0].name === "PPL");
+check("fn: plan day per section, empty dropped", fn.plans[0].days.length === 1 && fn.stats.planDays === 1);
+check("fn: day named like section", fn.plans[0].days[0].name === "Push");
+check("fn: day exercises in sort order", JSON.stringify(fn.plans[0].days[0].exerciseIds) === JSON.stringify(["fn-ex-10", "fn-ex-11"]));
+check("fn: deterministic plan/day ids", fn.plans[0].id === "fn-pl-1" && fn.plans[0].days[0].id === "fn-rt-5");
 const fnAgain = mapFitNotes(fnRaw, [...DEFAULT_EXERCISES, ...fn.newExercises]);
 check("fn: re-import creates no new exercises", fnAgain.stats.newExercises === 0);
 check("fn: re-import keeps same ids", fnAgain.workouts[0].id === fn.workouts[0].id);
 const reBench: Exercise | undefined = [...DEFAULT_EXERCISES, ...fn.newExercises].find((e) => e.id === "fn-ex-10");
 check("fn: re-import maps logs onto prior import ids", !!reBench && fnAgain.workouts[1].entries[0].exerciseId === "fn-ex-10");
+
+// ----------------------------------------------------------------- plans.ts
+console.log("plans.ts");
+const legacyRoutines = [
+  { id: "r1", name: "My Routine", exerciseIds: ["bench-bb"] }, // user-created — untouched
+  { id: "fn-rt-5", name: "PPLU · Dienstag - Pull", exerciseIds: ["pullup"] },
+  { id: "fn-rt-6", name: "PPLU · Mittwoch - Legs", exerciseIds: ["squat-bb"] },
+  { id: "fn-rt-7", name: "Bro Split · Day 1", exerciseIds: ["bench-bb"] },
+];
+const migrated = splitLegacyImportRoutines(legacyRoutines);
+check("migration keeps user routines", migrated.routines.length === 1 && migrated.routines[0].id === "r1");
+check("migration groups by plan name", migrated.plans.length === 2);
+const pplu = migrated.plans.find((p) => p.name === "PPLU")!;
+check("migration rebuilds days", pplu.days.length === 2 && pplu.days[0].name === "Dienstag - Pull");
+check("migration keeps day ids", pplu.days[0].id === "fn-rt-5");
+check("migration no-op without legacy", splitLegacyImportRoutines(migrated.routines).plans.length === 0);
+const remerged = mergePlans(migrated.plans, [{ id: "fn-pl-9", name: "pplu", days: pplu.days }]);
+check("mergePlans replaces by name (case-insensitive)", remerged.length === 2 && !!remerged.find((p) => p.name === "pplu"));
+const appended = mergePlans(migrated.plans, [{ id: "fn-pl-new", name: "Upper Lower", days: pplu.days }]);
+check("mergePlans appends new plans", appended.length === 3);
+
+// -------------------------------------------------------------- calendar.ts
+console.log("calendar.ts");
+check("isoDate pads", isoDate(2026, 6, 5) === "2026-07-05");
+const july = monthGrid(2026, 6); // July 2026 starts on a Wednesday
+check("monthGrid weeks of 7", july.every((wk) => wk.length === 7));
+check("monthGrid pads before the 1st", july[0][0] === null && july[0][2] === "2026-07-01");
+check("monthGrid contains all 31 days", july.flat().filter(Boolean).length === 31);
+check("monthGrid last day", july.flat().filter(Boolean).pop() === "2026-07-31");
+check("shiftMonth wraps year down", JSON.stringify(shiftMonth({ year: 2026, month: 0 }, -1)) === JSON.stringify({ year: 2025, month: 11 }));
+check("shiftMonth wraps year up", JSON.stringify(shiftMonth({ year: 2026, month: 11 }, 1)) === JSON.stringify({ year: 2027, month: 0 }));
+check("monthLabel", monthLabel({ year: 2026, month: 6 }) === "July 2026");
+const calDays = calendarDays(all, (id) => (id === "bench-bb" ? "Chest" : undefined));
+check("calendar ignores unfinished workouts", !calDays.has("2026-07-03") && calDays.size === 2);
+check("calendar day carries groups", calDays.get("2026-07-01")?.groups.join() === "Chest");
+check("calendar day opens the workout", calDays.get("2026-07-02")?.workoutId === "w2");
 
 // ------------------------------------------------------------ data integrity
 console.log("data integrity");

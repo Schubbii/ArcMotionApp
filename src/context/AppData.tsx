@@ -12,6 +12,7 @@ import type {
   Equipment,
   Exercise,
   MuscleGroup,
+  Plan,
   Routine,
   Settings,
   ThemeId,
@@ -25,6 +26,7 @@ import { previousSets } from "../lib/stats";
 import { todayISO, uid } from "../lib/format";
 import type { AppSnapshot } from "../lib/backup";
 import type { FitNotesImport } from "../lib/fitnotes";
+import { mergePlans, splitLegacyImportRoutines } from "../lib/plans";
 
 /** Everything needed to fully roll the app back, including the live session. */
 interface SafetySnapshot extends AppSnapshot {
@@ -36,6 +38,7 @@ interface AppDataValue {
   ready: boolean;
   exercises: Exercise[];
   routines: Routine[];
+  plans: Plan[];
   workouts: Workout[];
   active: Workout | null;
   settings: Settings;
@@ -45,6 +48,7 @@ interface AppDataValue {
   exerciseById: (id: string) => Exercise | undefined;
   createRoutine: (name: string, exerciseIds: string[]) => void;
   deleteRoutine: (id: string) => void;
+  deletePlan: (id: string) => void;
 
   // workout session
   startEmptyWorkout: () => void;
@@ -96,6 +100,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [exercises, setExercises] = useState<Exercise[]>(DEFAULT_EXERCISES);
   const [routines, setRoutines] = useState<Routine[]>(DEFAULT_ROUTINES);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [active, setActive] = useState<Workout | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -105,9 +110,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // Hydrate once.
   useEffect(() => {
     (async () => {
-      const [ex, ro, wo, ac, se, snap] = await Promise.all([
+      const [ex, ro, pl, wo, ac, se, snap] = await Promise.all([
         loadJSON(STORAGE_KEYS.exercises, DEFAULT_EXERCISES),
         loadJSON(STORAGE_KEYS.routines, DEFAULT_ROUTINES),
+        loadJSON(STORAGE_KEYS.plans, [] as Plan[]),
         loadJSON(STORAGE_KEYS.workouts, [] as Workout[]),
         loadJSON<Workout | null>(STORAGE_KEYS.active, null),
         loadJSON(STORAGE_KEYS.settings, DEFAULT_SETTINGS),
@@ -118,7 +124,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const have = new Set(ex.map((e) => e.id));
       const missing = DEFAULT_EXERCISES.filter((d) => !have.has(d.id));
       setExercises(missing.length ? [...ex, ...missing] : ex);
-      setRoutines(ro);
+      // The first import version flattened FitNotes plans into standalone
+      // routines — rebuild them as plans so old installs upgrade in place.
+      const legacy = splitLegacyImportRoutines(ro);
+      setRoutines(legacy.routines);
+      setPlans(legacy.plans.length ? mergePlans(pl, legacy.plans) : pl);
       setWorkouts(wo);
       setActive(ac);
       // Merge with defaults so settings saved by older versions gain new fields.
@@ -132,6 +142,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // Persist on change (after hydrate).
   useEffect(() => { if (loaded.current) saveJSON(STORAGE_KEYS.exercises, exercises); }, [exercises]);
   useEffect(() => { if (loaded.current) saveJSON(STORAGE_KEYS.routines, routines); }, [routines]);
+  useEffect(() => { if (loaded.current) saveJSON(STORAGE_KEYS.plans, plans); }, [plans]);
   useEffect(() => { if (loaded.current) saveJSON(STORAGE_KEYS.workouts, workouts); }, [workouts]);
   useEffect(() => { if (loaded.current) saveJSON(STORAGE_KEYS.active, active); }, [active]);
   useEffect(() => { if (loaded.current) saveJSON(STORAGE_KEYS.settings, settings); }, [settings]);
@@ -167,7 +178,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     // Capture the full current state so an import/restore can be undone.
     const takeSafetySnapshot = () => {
       const ts = Date.now();
-      const snap: SafetySnapshot = { ts, exercises, routines, workouts, settings, active };
+      const snap: SafetySnapshot = { ts, exercises, routines, plans, workouts, settings, active };
       saveJSON(STORAGE_KEYS.snapshot, snap);
       setUndoTs(ts);
     };
@@ -192,6 +203,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       ready,
       exercises,
       routines,
+      plans,
       workouts,
       active,
       settings,
@@ -205,6 +217,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       createRoutine: (name, exerciseIds) =>
         setRoutines((prev) => [...prev, { id: uid(), name: name.trim().slice(0, 60), exerciseIds }]),
       deleteRoutine: (id) => setRoutines((prev) => prev.filter((r) => r.id !== id)),
+      deletePlan: (id) => setPlans((prev) => prev.filter((p) => p.id !== id)),
 
       startEmptyWorkout: () =>
         setActive({
@@ -290,14 +303,16 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setRepStep: (n) => setSettings((p) => ({ ...p, repStep: Math.max(1, Math.round(n)) })),
       setName: (name) => setSettings((p) => ({ ...p, name: name.slice(0, 40) })),
 
-      exportSnapshot: () => ({ exercises, routines, workouts, settings }),
+      exportSnapshot: () => ({ exercises, routines, plans, workouts, settings }),
       restoreBackup: (data) => {
         takeSafetySnapshot();
         // Same merges as hydrate, so a backup from an older app version still
-        // gains new default exercises and settings fields.
+        // gains new default exercises, settings fields and the plan migration.
         const have = new Set(data.exercises.map((e) => e.id));
         setExercises([...data.exercises, ...DEFAULT_EXERCISES.filter((d) => !have.has(d.id))]);
-        setRoutines(data.routines);
+        const legacy = splitLegacyImportRoutines(data.routines);
+        setRoutines(legacy.routines);
+        setPlans(mergePlans(data.plans ?? [], legacy.plans));
         setWorkouts(newestFirst(data.workouts));
         setSettings({ ...DEFAULT_SETTINGS, ...data.settings });
         setActive(null); // the restored state replaces the world, live session included
@@ -306,14 +321,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         takeSafetySnapshot();
         setExercises((prev) => upsert(prev, data.newExercises));
         setWorkouts((prev) => newestFirst(upsert(prev, data.workouts)));
-        setRoutines((prev) => upsert(prev, data.routines));
+        setPlans((prev) => mergePlans(prev, data.plans));
       },
       undoTs,
       restoreLastSnapshot: async () => {
         const snap = await loadJSON<SafetySnapshot | null>(STORAGE_KEYS.snapshot, null);
         if (!snap) return false;
+        // Older snapshots predate plans and may still hold flat fn-rt routines.
+        const legacy = splitLegacyImportRoutines(snap.routines);
         setExercises(snap.exercises);
-        setRoutines(snap.routines);
+        setRoutines(legacy.routines);
+        setPlans(mergePlans(snap.plans ?? [], legacy.plans));
         setWorkouts(snap.workouts);
         setSettings({ ...DEFAULT_SETTINGS, ...snap.settings });
         setActive(snap.active);
@@ -322,7 +340,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         return true;
       },
     };
-  }, [ready, exercises, routines, workouts, active, settings, undoTs, exerciseById, buildEntry]);
+  }, [ready, exercises, routines, plans, workouts, active, settings, undoTs, exerciseById, buildEntry]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

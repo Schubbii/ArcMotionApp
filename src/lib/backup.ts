@@ -1,4 +1,4 @@
-import type { Exercise, Routine, Settings, Workout } from "../types";
+import type { Exercise, Plan, Routine, Settings, Workout } from "../types";
 
 /**
  * ArcMotion backup file format. Versioned so future schema changes can
@@ -11,6 +11,7 @@ export interface BackupFile {
   exportedAt: string;
   exercises: Exercise[];
   routines: Routine[];
+  plans: Plan[];
   workouts: Workout[];
   settings: Settings;
 }
@@ -19,6 +20,7 @@ export interface BackupFile {
 export interface AppSnapshot {
   exercises: Exercise[];
   routines: Routine[];
+  plans: Plan[];
   workouts: Workout[];
   settings: Settings;
 }
@@ -55,6 +57,12 @@ function validRoutine(r: unknown): r is Routine {
   if (typeof r !== "object" || r === null) return false;
   const x = r as Record<string, unknown>;
   return isStr(x.id) && isStr(x.name) && Array.isArray(x.exerciseIds) && x.exerciseIds.every(isStr);
+}
+
+function validPlan(p: unknown): p is Plan {
+  if (typeof p !== "object" || p === null) return false;
+  const x = p as Record<string, unknown>;
+  return isStr(x.id) && isStr(x.name) && Array.isArray(x.days) && x.days.every(validRoutine);
 }
 
 function validSet(s: unknown): boolean {
@@ -96,6 +104,9 @@ export function parseBackup(json: string): ParseResult {
     return { ok: false, error: "Backup is damaged (exercises)." };
   if (!Array.isArray(f.routines) || !f.routines.every(validRoutine))
     return { ok: false, error: "Backup is damaged (routines)." };
+  // Plans arrived after v1 shipped — old backups simply don't have the field.
+  if (f.plans !== undefined && (!Array.isArray(f.plans) || !f.plans.every(validPlan)))
+    return { ok: false, error: "Backup is damaged (plans)." };
   if (!Array.isArray(f.workouts) || !f.workouts.every(validWorkout))
     return { ok: false, error: "Backup is damaged (workouts)." };
   if (typeof f.settings !== "object" || f.settings === null)
@@ -106,6 +117,7 @@ export function parseBackup(json: string): ParseResult {
     data: {
       exercises: f.exercises as Exercise[],
       routines: f.routines as Routine[],
+      plans: (f.plans ?? []) as Plan[],
       workouts: f.workouts as Workout[],
       settings: f.settings as Settings,
     },

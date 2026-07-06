@@ -13,12 +13,15 @@ export function SectionTitle({ children, style }: { children: ReactNode; style?:
   return <Text style={[ui.section, { color: t.textMuted }, style]}>{String(children).toUpperCase()}</Text>;
 }
 
-export function ScreenTitle({ title, sub }: { title: string; sub?: string }) {
+export function ScreenTitle({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) {
   const t = useTheme();
   return (
-    <View style={ui.screenHead}>
-      <Text style={[ui.h1, { color: t.text }]}>{title}</Text>
-      {sub ? <Text style={[ui.sub, { color: t.textMuted }]}>{sub}</Text> : null}
+    <View style={[ui.screenHead, right ? { flexDirection: "row", alignItems: "center", gap: 12 } : null]}>
+      <View style={right ? { flex: 1 } : null}>
+        <Text style={[ui.h1, { color: t.text }]}>{title}</Text>
+        {sub ? <Text style={[ui.sub, { color: t.textMuted }]}>{sub}</Text> : null}
+      </View>
+      {right}
     </View>
   );
 }
