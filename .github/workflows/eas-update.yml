@@ -1,0 +1,64 @@
+name: EAS Update (preview)
+
+# Publishes an over-the-air JS/asset update to the "preview" channel on every
+# push to the working branch. Installed preview builds pull it on next launch —
+# no local `eas update`, no rebuild. Native/version changes still need a build.
+on:
+  push:
+    branches: [claude/expo-mobile]
+    # Doc-only commits don't change the app bundle — skip them to save minutes.
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - ".gitignore"
+  # Lets you trigger it by hand from the Actions tab too.
+  workflow_dispatch:
+
+# A newer push supersedes an in-flight run instead of stacking updates.
+concurrency:
+  group: eas-update-preview
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    # Without the token nothing can publish — fail loud instead of half-running.
+    steps:
+      - name: Check EXPO_TOKEN is set
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "::error::Missing EXPO_TOKEN secret. Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Gate: never ship a broken bundle over the air.
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # Commit message becomes the update note. Passed via env (not string
+      # interpolation) so quotes/newlines can't break or inject into the shell.
+      - name: Publish update
+        env:
+          UPDATE_MESSAGE: ${{ github.event.head_commit.message || format('manual dispatch {0}', github.sha) }}
+        run: eas update --branch preview --message "$UPDATE_MESSAGE" --non-interactive
