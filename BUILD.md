@@ -61,8 +61,60 @@ eas build --profile preview   --platform ios        # iOS (needs Apple account)
 eas submit --platform android   # uploads the .aab to Play Console
 ```
 
+## Over-the-air updates (EAS Update) — push changes without rebuilding
+
+Once you've installed a **preview build** on your phone (above), you no longer
+need a rebuild or `npx expo start` for JS/asset changes. Push them straight to
+the installed app:
+
+```bash
+eas update --branch preview --message "what changed"
+```
+
+The app pulls the new bundle **on its next cold start** (it's already wired to
+check `https://u.expo.dev/<projectId>` — see `updates` in `app.json`). No
+Metro server, no laptop, no store review.
+
+### How it's wired
+
+- `app.json` → `updates.url` points at this project's update server, and
+  `runtimeVersion.policy: "appVersion"` ties each update to the app version
+  (`1.0.0`). An update only lands on builds with the **same** runtime version.
+- `eas.json` → each build profile has a `channel` (`development` / `preview` /
+  `production`). `eas update --branch <name>` publishes to the branch that its
+  channel maps to (by default the channel and branch share a name).
+
+### The everyday loop
+
+```bash
+# 1. once: put a build on your phone
+eas build --profile preview --platform android
+
+# 2. thereafter: ship any JS/asset change instantly
+eas update --branch preview --message "tweak calendar colors"
+# → reopen the app to get it
+```
+
+### When a plain update is NOT enough → you must rebuild
+
+OTA ships JavaScript + assets only. Rebuild (`eas build …`) when you:
+- add/remove a **native module** or change native config (new `expo-*` package,
+  permissions, app icon/splash),
+- **bump the app version** (`expo.version`) — that changes the runtime version,
+  so old installs stop receiving updates until they get the new build.
+
+### Push OTA to a store build
+
+Same command, `--branch production`. Users of the installed store app get the
+JS change on next launch — as long as the native runtime version matches. (Note:
+Apple/Google rules — OTA is for fixes/tweaks, not for shipping entirely new
+functionality that bypasses review.)
+
 ## Versioning
 
 `eas.json` uses `appVersionSource: "local"`, so the version comes from `app.json`:
 - bump `expo.version` (e.g. `1.0.1`)
 - bump `expo.android.versionCode` and `expo.ios.buildNumber` for each store upload.
+- **Heads-up:** with `runtimeVersion.policy: "appVersion"`, bumping
+  `expo.version` starts a fresh OTA lineage — you must ship a new build for that
+  version before `eas update` reaches those users again.

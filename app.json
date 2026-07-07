@@ -3,6 +3,13 @@
     "name": "ArcMotion",
     "slug": "arcmotion",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/c9e9ac90-9ec4-48a4-b7b3-c0efbeaef836",
+      "fallbackToCacheTimeout": 0
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",

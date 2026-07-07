@@ -136,6 +136,11 @@ Regeneration script lives in the scratchpad (uses `sharp`).
 - **Builds:** EAS is configured (`eas.json`, profiles: development/preview/
   production; `preview` → installable `.apk`). Project is linked
   (`extra.eas.projectId` in app.json). See `BUILD.md`.
+- **OTA updates:** `expo-updates` is set up (`updates.url` + `runtimeVersion`
+  policy `appVersion` in app.json; each build profile has a `channel`). After a
+  preview build is on-device, ship JS/asset changes with
+  `eas update --branch preview` — no rebuild. Native/version changes still need
+  a rebuild. Details in `BUILD.md`.
 
 ## Git / workflow
 
