@@ -6,6 +6,8 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { backupFileName, serializeBackup, type AppSnapshot } from "./backup";
 import type { FitNotesRaw } from "./fitnotes";
+// Metro resolves this to fitnotesDb.web.ts on web, keeping expo-sqlite native-only.
+import { readFitNotesDb } from "./fitnotesDb";
 import { todayISO } from "./format";
 
 /**
@@ -92,37 +94,10 @@ export async function pickFitNotesData(): Promise<TransferResult<FitNotesRaw>> {
     const staged = `${FileSystem.cacheDirectory}${DB_NAME}`;
     await FileSystem.copyAsync({ from: res.assets[0].uri, to: staged });
 
-    const SQLite = await import("expo-sqlite");
-    const db = await SQLite.openDatabaseAsync(DB_NAME, undefined, FileSystem.cacheDirectory ?? undefined);
     try {
-      const all = async <T>(sql: string): Promise<T[]> => {
-        // Optional tables (comments, routines) may be missing in old backups.
-        try {
-          return await db.getAllAsync<T>(sql);
-        } catch {
-          return [];
-        }
-      };
-      const exercises = await db.getAllAsync<FitNotesRaw["exercises"][number]>(
-        "SELECT _id, name, category_id, exercise_type_id FROM exercise"
-      );
-      const logs = await db.getAllAsync<FitNotesRaw["logs"][number]>(
-        "SELECT _id, exercise_id, date, metric_weight, reps FROM training_log"
-      );
-      const raw: FitNotesRaw = {
-        exercises,
-        logs,
-        categories: await all("SELECT _id, name FROM Category"),
-        comments: await all("SELECT owner_id, comment FROM Comment WHERE owner_type_id = 1"),
-        routines: await all("SELECT _id, name FROM Routine"),
-        sections: await all("SELECT _id, routine_id, name, sort_order FROM RoutineSection"),
-        sectionExercises: await all(
-          "SELECT routine_section_id, exercise_id, sort_order FROM RoutineSectionExercise"
-        ),
-      };
+      const raw = await readFitNotesDb(DB_NAME, FileSystem.cacheDirectory ?? "");
       return { ok: true, value: raw };
     } finally {
-      await db.closeAsync().catch(() => {});
       await FileSystem.deleteAsync(staged, { idempotent: true }).catch(() => {});
     }
   } catch (e) {
