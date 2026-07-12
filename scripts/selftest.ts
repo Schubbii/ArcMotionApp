@@ -25,6 +25,14 @@ import { backupFileName, parseBackup, serializeBackup, type AppSnapshot } from "
 import { mapFitNotes, type FitNotesRaw } from "../src/lib/fitnotes";
 import { mergePlans, splitLegacyImportRoutines } from "../src/lib/plans";
 import { calendarDays, isoDate, monthGrid, monthLabel, shiftMonth } from "../src/lib/calendar";
+import {
+  annualSavingsPercent,
+  FREE_THEME_IDS,
+  isCalendarLocked,
+  isThemeLocked,
+  PRO_FEATURES,
+  resolveTheme,
+} from "../src/lib/entitlements";
 import { DEFAULT_EXERCISES, DEFAULT_ROUTINES } from "../src/data/exercises";
 import { PROGRAMS, PROGRAM_GOALS } from "../src/data/programs";
 import { THEMES, DEFAULT_THEME, paletteFor } from "../src/theme/themes";
@@ -282,6 +290,25 @@ const calDays = calendarDays(all, (id) => (id === "bench-bb" ? "Chest" : undefin
 check("calendar ignores unfinished workouts", !calDays.has("2026-07-03") && calDays.size === 2);
 check("calendar day carries groups", calDays.get("2026-07-01")?.groups.join() === "Chest");
 check("calendar day opens the workout", calDays.get("2026-07-02")?.workoutId === "w2");
+
+// ------------------------------------------------------------ entitlements.ts
+console.log("entitlements.ts");
+check("free themes are not locked for free users", FREE_THEME_IDS.every((id) => !isThemeLocked(id, false)));
+check("a non-free theme is locked for free users", isThemeLocked("shadow", false) && isThemeLocked("aurora", false));
+check("nothing is locked for Pro users", THEMES.every((th) => !isThemeLocked(th.id, true)));
+check("free theme ids are real themes", FREE_THEME_IDS.every((id) => themeIdsExist(id)));
+check("calendar locked for free, open for pro", isCalendarLocked(false) && !isCalendarLocked(true));
+check("resolveTheme keeps a free theme for free users", resolveTheme("volt", false) === "volt");
+check("resolveTheme downgrades a Pro theme for free users", resolveTheme("shadow", false) === FREE_THEME_IDS[0]);
+check("resolveTheme keeps any theme for Pro users", resolveTheme("shadow", true) === "shadow");
+check("PRO_FEATURES non-empty with unique ids", PRO_FEATURES.length > 0 && new Set(PRO_FEATURES.map((f) => f.id)).size === PRO_FEATURES.length);
+check("annualSavings: 3.99/mo vs 29.99/yr ≈ 37%", annualSavingsPercent(3.99, 29.99) === 37);
+check("annualSavings: 0 when annual not cheaper", annualSavingsPercent(2, 30) === 0);
+check("annualSavings: 0 on unknown prices", annualSavingsPercent(0, 29.99) === 0 && annualSavingsPercent(3.99, 0) === 0);
+
+function themeIdsExist(id: string): boolean {
+  return THEMES.some((th) => th.id === id);
+}
 
 // ------------------------------------------------------------ data integrity
 console.log("data integrity");

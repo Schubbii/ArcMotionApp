@@ -189,3 +189,23 @@ export function CalendarIcon(p: IconProps) {
     </Base>
   );
 }
+
+export function LockIcon(p: IconProps) {
+  return (
+    <Base size={16} {...p}>
+      <Rect {...s} x="3" y="11" width="18" height="11" rx="2" />
+      <Path {...s} d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </Base>
+  );
+}
+
+export function CrownIcon(p: IconProps) {
+  return (
+    <Base {...p}>
+      <Path
+        {...s}
+        d="M2 18h20M3 8l4.5 3.5L12 4l4.5 7.5L21 8l-1.6 10H4.6z"
+      />
+    </Base>
+  );
+}

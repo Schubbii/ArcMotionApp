@@ -3,8 +3,10 @@ import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, BackHandler, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AppDataProvider, useAppData } from "./src/context/AppData";
+import { ProProvider, usePro } from "./src/context/ProContext";
 import { ThemeContext } from "./src/theme/ThemeContext";
 import { paletteFor } from "./src/theme/themes";
+import { isCalendarLocked, resolveTheme } from "./src/lib/entitlements";
 import { BottomNav, type Tab } from "./src/components/BottomNav";
 import { GlassBackdrop } from "./src/components/GlassBackdrop";
 import { FadeSlideIn } from "./src/components/motion";
@@ -21,12 +23,15 @@ import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 import { PlanDetailScreen } from "./src/screens/PlanDetailScreen";
 import { WorkoutDetailScreen } from "./src/screens/WorkoutDetailScreen";
 import { CalendarScreen } from "./src/screens/CalendarScreen";
+import { PaywallScreen } from "./src/screens/PaywallScreen";
 
 export default function App() {
   return (
     <SafeAreaProvider>
       <AppDataProvider>
-        <Themed />
+        <ProProvider>
+          <Themed />
+        </ProProvider>
       </AppDataProvider>
     </SafeAreaProvider>
   );
@@ -41,7 +46,8 @@ type Route =
   | { name: "plan"; id: string }
   | { name: "program"; id: string }
   | { name: "workout"; id: string; fromCalendar?: boolean }
-  | { name: "calendar" };
+  | { name: "calendar" }
+  | { name: "paywall" };
 
 /** Where "back" leads from a pushed route (one level up, then the tabs). */
 function backRoute(route: Route): Route {
@@ -52,7 +58,10 @@ function backRoute(route: Route): Route {
 
 function Themed() {
   const { settings, ready } = useAppData();
-  const palette = paletteFor(settings.theme);
+  const { isPro } = usePro();
+  // A lapsed/free user keeps their theme choice stored but is shown a free one,
+  // so the app never renders a palette they can no longer access.
+  const palette = paletteFor(resolveTheme(settings.theme, isPro));
 
   return (
     <ThemeContext.Provider value={palette}>
@@ -74,6 +83,7 @@ function Themed() {
 }
 
 function Router() {
+  const { isPro } = usePro();
   const [tab, setTab] = useState<Tab>("workout");
   const [route, setRoute] = useState<Route>({ name: "tabs" });
 
@@ -154,6 +164,13 @@ function Router() {
       </FadeSlideIn>
     );
   }
+  if (route.name === "paywall") {
+    return (
+      <FadeSlideIn key="paywall">
+        <PaywallScreen onClose={() => setRoute({ name: "tabs" })} />
+      </FadeSlideIn>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -174,13 +191,15 @@ function Router() {
         {tab === "history" && (
           <HistoryScreen
             onOpenWorkout={(id) => setRoute({ name: "workout", id })}
-            onOpenCalendar={() => setRoute({ name: "calendar" })}
+            onOpenCalendar={() =>
+              setRoute(isCalendarLocked(isPro) ? { name: "paywall" } : { name: "calendar" })
+            }
           />
         )}
         {tab === "progress" && (
           <ProgressScreen onOpenExercise={(id) => setRoute({ name: "exercise", id })} />
         )}
-        {tab === "settings" && <SettingsScreen />}
+        {tab === "settings" && <SettingsScreen onOpenPaywall={() => setRoute({ name: "paywall" })} />}
       </FadeSlideIn>
       <ResumeBar onPress={() => setRoute({ name: "active" })} />
       <BottomNav active={tab} onChange={setTab} />

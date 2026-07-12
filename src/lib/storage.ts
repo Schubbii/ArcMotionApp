@@ -28,4 +28,10 @@ export const STORAGE_KEYS = {
   settings: "arcmotion.settings",
   /** Safety snapshot taken right before an import/restore, for one-tap undo. */
   snapshot: "arcmotion.snapshot",
+  /** Cached Pro entitlement, so cold start knows the state instantly + offline. */
+  pro: "arcmotion.pro",
+  /** Dev-only override to preview the free/Pro states without a real purchase. */
+  proDebug: "arcmotion.pro.debug",
+  /** The mock store's "purchased" flag (used when no RevenueCat key is set). */
+  proMock: "arcmotion.pro.mock",
 } as const;

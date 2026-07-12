@@ -1,23 +1,34 @@
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAppData } from "../context/AppData";
+import { usePro } from "../context/ProContext";
 import { useTheme } from "../theme/ThemeContext";
 import { NAV_CLEARANCE } from "../components/BottomNav";
 import { THEMES } from "../theme/themes";
 import { Card, ScreenTitle, SectionTitle } from "../components/ui";
 import { PressableScale } from "../components/motion";
-import { CheckIcon } from "../components/Icons";
+import { CheckIcon, CrownIcon, LockIcon } from "../components/Icons";
 import { showDialog } from "../lib/dialogs";
+import { isThemeLocked } from "../lib/entitlements";
 import { parseBackup } from "../lib/backup";
 import { mapFitNotes } from "../lib/fitnotes";
 import { exportBackup, pickBackupJson, pickFitNotesData } from "../lib/transfer";
 
-export function SettingsScreen() {
+export function SettingsScreen({ onOpenPaywall }: { onOpenPaywall: () => void }) {
   const t = useTheme();
   const {
     settings, setTheme, setUnit, setWeightStep, setRepStep, setName, workouts,
     exercises, exportSnapshot, restoreBackup, importFitNotes, undoTs, restoreLastSnapshot,
   } = useAppData();
+  const { isPro, mode, restore, restoring, devMode, setDevMode, devToolsEnabled } = usePro();
+
+  const onRestorePurchases = async () => {
+    const res = await restore();
+    showDialog(
+      res.ok ? "Purchases restored" : "Nothing to restore",
+      res.ok ? "Your Pro subscription is active again." : (res.error ?? "No previous purchase was found."),
+    );
+  };
   /** Which data action is running — rows disable while busy. */
   const [busy, setBusy] = useState<null | "export" | "restore" | "fitnotes" | "undo">(null);
 
@@ -135,6 +146,73 @@ export function SettingsScreen() {
           />
         </Card>
 
+        <SectionTitle>ArcMotion Pro</SectionTitle>
+        {isPro ? (
+          <Card>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View style={[styles.crownBadge, { backgroundColor: t.primarySoft }]}>
+                <CrownIcon size={20} color={t.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: t.text, fontWeight: "800", fontSize: 15 }}>Pro is active</Text>
+                <Text style={{ color: t.textMuted, fontSize: 12.5, marginTop: 2, lineHeight: 17 }}>
+                  All themes and the calendar overview are unlocked. Thanks for the support!
+                </Text>
+              </View>
+            </View>
+            {mode === "revenuecat" && (
+              <TouchableOpacity onPress={onRestorePurchases} disabled={restoring} style={[styles.dataRow, { borderTopWidth: 1, borderTopColor: t.border, marginTop: 6 }]}>
+                <Text style={{ color: t.textMuted, fontWeight: "700", fontSize: 14, flex: 1 }}>
+                  {restoring ? "Restoring…" : "Restore purchases"}
+                </Text>
+                <Text style={{ color: t.textMuted, fontSize: 18 }}>›</Text>
+              </TouchableOpacity>
+            )}
+          </Card>
+        ) : (
+          <PressableScale scaleTo={0.98} onPress={onOpenPaywall} style={[styles.proCard, { backgroundColor: t.primarySoft, borderColor: t.primary }]}>
+            <View style={[styles.crownBadge, { backgroundColor: t.primary }]}>
+              <CrownIcon size={20} color={t.onPrimary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: t.text, fontWeight: "900", fontSize: 16 }}>Go Pro</Text>
+              <Text style={{ color: t.textMuted, fontSize: 12.5, marginTop: 2, lineHeight: 17 }}>
+                Unlock every theme and the calendar overview. From €3.99/mo — free trial.
+              </Text>
+            </View>
+            <Text style={{ color: t.primary, fontSize: 20, fontWeight: "700" }}>›</Text>
+          </PressableScale>
+        )}
+        {!isPro && mode === "revenuecat" && (
+          <TouchableOpacity onPress={onRestorePurchases} disabled={restoring} style={{ paddingVertical: 12, alignItems: "center" }}>
+            <Text style={{ color: t.textMuted, fontWeight: "700", fontSize: 13.5 }}>
+              {restoring ? "Restoring…" : "Restore purchases"}
+            </Text>
+          </TouchableOpacity>
+        )}
+        {devToolsEnabled && (
+          <Card style={{ marginTop: 12 }}>
+            <Text style={{ color: t.textMuted, fontSize: 12, fontWeight: "800", letterSpacing: 0.5, marginBottom: 10 }}>
+              DEV · PREVIEW PRO STATE
+            </Text>
+            <View style={[styles.segment, { backgroundColor: t.surface2 }]}>
+              {(["pro", "free", "live"] as const).map((m) => {
+                const on = devMode === m;
+                return (
+                  <TouchableOpacity key={m} style={[styles.segBtn, on && { backgroundColor: t.surface }]} onPress={() => setDevMode(m)}>
+                    <Text style={{ color: on ? t.text : t.textMuted, fontWeight: "700", fontSize: 12.5 }}>
+                      {m === "pro" ? "Pro" : m === "free" ? "Free" : "Live"}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={{ color: t.textFaint, fontSize: 11.5, marginTop: 8, lineHeight: 16 }}>
+              Only visible in development builds. "Live" uses the real (or mock) purchase.
+            </Text>
+          </Card>
+        )}
+
         <SectionTitle>Color Theme</SectionTitle>
         <Text style={{ color: t.textMuted, fontSize: 13, marginHorizontal: 4, marginBottom: 12 }}>
           Choose a look — it instantly recolors the whole app.
@@ -142,14 +220,15 @@ export function SettingsScreen() {
 
         {THEMES.map((th) => {
           const active = settings.theme === th.id;
+          const locked = isThemeLocked(th.id, isPro);
           return (
             <PressableScale
               key={th.id}
               scaleTo={0.97}
-              onPress={() => setTheme(th.id)}
+              onPress={() => (locked ? onOpenPaywall() : setTheme(th.id))}
               style={[styles.themeCard, { backgroundColor: t.glassSurface, borderColor: active ? t.primary : t.glassBorder }]}
             >
-              <View style={[styles.preview, { backgroundColor: th.palette.bg, borderColor: t.border }]}>
+              <View style={[styles.preview, { backgroundColor: th.palette.bg, borderColor: t.border }, locked && { opacity: 0.6 }]}>
                 {th.swatches.slice(0, 3).map((c, i) => (
                   <View key={i} style={[styles.dot, { backgroundColor: c }]} />
                 ))}
@@ -158,11 +237,15 @@ export function SettingsScreen() {
                 <Text style={{ fontWeight: "800", fontSize: 15, color: t.text }}>{th.name}</Text>
                 <Text style={{ fontSize: 12.5, color: t.textMuted, marginTop: 2 }}>{th.description}</Text>
               </View>
-              {active && (
+              {active ? (
                 <View style={[styles.check, { backgroundColor: t.primary }]}>
                   <CheckIcon size={14} color={t.onPrimary} />
                 </View>
-              )}
+              ) : locked ? (
+                <View style={styles.lockWrap}>
+                  <LockIcon size={15} color={t.textMuted} />
+                </View>
+              ) : null}
             </PressableScale>
           );
         })}
@@ -349,6 +432,9 @@ function StepControl({
 }
 
 const styles = StyleSheet.create({
+  proCard: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: 18, borderWidth: 1.5 },
+  crownBadge: { width: 42, height: 42, borderRadius: 13, alignItems: "center", justifyContent: "center" },
+  lockWrap: { width: 24, height: 24, alignItems: "center", justifyContent: "center" },
   themeCard: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 16, marginBottom: 12, borderWidth: 2 },
   preview: { width: 52, height: 52, borderRadius: 13, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 },
   dot: { width: 11, height: 11, borderRadius: 6 },

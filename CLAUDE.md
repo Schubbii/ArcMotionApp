@@ -142,6 +142,23 @@ Regeneration script lives in the scratchpad (uses `sharp`).
   `eas update --branch preview` — no rebuild. Native/version changes still need
   a rebuild. Details in `BUILD.md`.
 
+## Monetization (ArcMotion Pro)
+
+Freemium subscription, still **account-free** (IAP is tied to the store account,
+not an app login). Full setup/testing guide in `MONETIZATION.md`.
+- **Gating is declarative:** `src/lib/entitlements.ts` is the single source of
+  truth for free vs Pro (`isThemeLocked`, `isCalendarLocked`, `resolveTheme`,
+  `PRO_FEATURES`, `FREE_THEME_IDS`). Change the split there — nothing else
+  hard-codes it. It's pure + covered by `npm test`.
+- **Store is abstracted:** `src/lib/purchases.ts` (native, RevenueCat via dynamic
+  import) + `purchases.web.ts` (mock) + `purchasesMock.ts`. Metro platform-
+  resolution keeps `react-native-purchases` out of the web bundle (same trick as
+  `fitnotesDb`). Empty keys in `purchasesConfig.ts` → mock mode (no real charge).
+- **State:** `usePro()` from `src/context/ProContext.tsx` — `isPro`, `purchase`,
+  `restore`. Entitlement is cached in AsyncStorage (offline-first). In `__DEV__`
+  the user is seeded Pro; Settings has a dev-only Pro/Free/Live preview toggle.
+- Real purchases need the native module → a **rebuild**, not just `eas update`.
+
 ## Git / workflow
 
 - Commit as `Claude <noreply@anthropic.com>`; work on `claude/expo-mobile`.
