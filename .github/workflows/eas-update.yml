@@ -56,6 +56,19 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      # An installed build listens on a *channel*; updates are published to a
+      # *branch*. If the channel isn't pointed at the branch, updates show up
+      # with "Channel: None" and never reach the device. Builds create the
+      # channel but don't reliably link it, so make the link explicit and
+      # idempotent here. Non-fatal: a hiccup must never block the publish.
+      - name: Link preview channel to preview branch
+        run: |
+          eas channel:edit preview --branch preview --non-interactive \
+            || eas channel:create preview --non-interactive \
+            || echo "::warning::Could not link the preview channel automatically."
+          echo "--- current channel state ---"
+          eas channel:view preview --non-interactive || true
+
       # Commit message becomes the update note. Passed via env (not string
       # interpolation) so quotes/newlines can't break or inject into the shell.
       - name: Publish update
