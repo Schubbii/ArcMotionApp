@@ -69,6 +69,16 @@ jobs:
           echo "--- current channel state ---"
           eas channel:view preview --non-interactive || true
 
+      # Surfaces which builds exist (profile/channel/runtime) and what's live
+      # on the preview branch, so "device never receives updates" can be
+      # diagnosed straight from the run log instead of guessing.
+      - name: Build & update diagnostics
+        run: |
+          echo "--- recent builds ---"
+          eas build:list --limit 5 --non-interactive || true
+          echo "--- updates on branch preview ---"
+          eas update:list --branch preview --limit 3 --non-interactive || true
+
       # Commit message becomes the update note. Passed via env (not string
       # interpolation) so quotes/newlines can't break or inject into the shell.
       - name: Publish update

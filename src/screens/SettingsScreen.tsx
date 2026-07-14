@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import * as Updates from "expo-updates";
 import { useAppData } from "../context/AppData";
 import { usePro } from "../context/ProContext";
 import { useTheme } from "../theme/ThemeContext";
@@ -30,7 +31,33 @@ export function SettingsScreen({ onOpenPaywall }: { onOpenPaywall: () => void })
     );
   };
   /** Which data action is running — rows disable while busy. */
-  const [busy, setBusy] = useState<null | "export" | "restore" | "fitnotes" | "undo">(null);
+  const [busy, setBusy] = useState<null | "export" | "restore" | "fitnotes" | "undo" | "update">(null);
+
+  // OTA updates only exist in installed builds — Expo Go / web run the bundle
+  // the dev server gives them, so there the section just explains itself.
+  const updatesEnabled = Updates.isEnabled && !__DEV__;
+
+  const onCheckUpdates = async () => {
+    setBusy("update");
+    try {
+      const res = await Updates.checkForUpdateAsync();
+      if (!res.isAvailable) {
+        showDialog("Up to date", "You're already running the latest version.");
+      } else {
+        await Updates.fetchUpdateAsync();
+        showDialog("Update ready", "The new version has been downloaded.", [
+          { text: "Later", style: "cancel" },
+          { text: "Restart now", onPress: () => { Updates.reloadAsync(); } },
+        ]);
+      }
+    } catch (e) {
+      // Surfacing the raw error here is deliberate — it names the actual
+      // problem (bad channel, unreachable server, runtime mismatch).
+      showDialog("Update check failed", e instanceof Error ? e.message : "Unknown error.");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const onExport = async () => {
     setBusy("export");
@@ -323,6 +350,35 @@ export function SettingsScreen({ onOpenPaywall }: { onOpenPaywall: () => void })
           )}
         </Card>
 
+        <SectionTitle>App Updates</SectionTitle>
+        <Card>
+          <InfoLine label="Channel" value={updatesEnabled ? Updates.channel || "— not set —" : "n/a (dev mode)"} />
+          <InfoLine label="Runtime" value={Updates.runtimeVersion || "—"} />
+          <InfoLine
+            label="Bundle"
+            value={
+              !updatesEnabled
+                ? "dev server"
+                : Updates.isEmbeddedLaunch
+                  ? "built-in (no update applied yet)"
+                  : `update ${Updates.updateId?.slice(0, 8) ?? "?"}${Updates.createdAt ? ` · ${Updates.createdAt.toLocaleDateString()}` : ""}`
+            }
+          />
+          {updatesEnabled ? (
+            <DataRow
+              title={busy === "update" ? "Checking…" : "Check for updates"}
+              sub="Download the newest version right now"
+              disabled={busy !== null}
+              onPress={onCheckUpdates}
+              separated
+            />
+          ) : (
+            <Text style={{ color: t.textFaint, fontSize: 12.5, lineHeight: 17, marginTop: 8 }}>
+              Update checks only work in an installed build (not in Expo Go or the dev server).
+            </Text>
+          )}
+        </Card>
+
         <SectionTitle>How It Works</SectionTitle>
         <Card>
           {[
@@ -349,6 +405,17 @@ export function SettingsScreen({ onOpenPaywall }: { onOpenPaywall: () => void })
           </Text>
         </Card>
       </ScrollView>
+    </View>
+  );
+}
+
+/** One "label: value" line in the App Updates card. */
+function InfoLine({ label, value }: { label: string; value: string }) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: "row", paddingVertical: 3 }}>
+      <Text style={{ color: t.textMuted, fontSize: 13, fontWeight: "700", width: 76 }}>{label}</Text>
+      <Text style={{ color: t.text, fontSize: 13, flex: 1 }} numberOfLines={1}>{value}</Text>
     </View>
   );
 }
