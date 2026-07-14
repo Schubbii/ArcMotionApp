@@ -1,0 +1,55 @@
+name: EAS Build (preview APK)
+
+# Builds the installable Android APK in Expo's cloud from the CURRENT branch
+# state. Trigger it from the Actions tab whenever a rebuild is needed (native
+# module added, version bumped). Building from GitHub instead of a local
+# checkout guarantees the APK can never lag behind the code — a stale local
+# folder is exactly what once shipped an APK without the OTA update engine.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: eas-build-preview
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check EXPO_TOKEN is set
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "::error::Missing EXPO_TOKEN secret. Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Same gates as the update workflow: never build a broken bundle.
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # --no-wait: queue the build and end the job; progress + the APK
+      # download link live on expo.dev → Builds. Credentials (keystore)
+      # already exist on EAS from earlier builds.
+      - name: Start EAS build
+        run: eas build --profile preview --platform android --non-interactive --no-wait
