@@ -37,6 +37,8 @@ interface ProValue {
   restoring: boolean;
   purchase: (packageId: string) => Promise<PurchaseResult>;
   restore: () => Promise<PurchaseResult>;
+  /** Undo the fake purchase — only available in mock/test mode. */
+  revokeMockPro: (() => Promise<void>) | null;
   /** Development builds only — the current override and a setter. */
   devMode: DevMode;
   setDevMode: (m: DevMode) => void;
@@ -129,6 +131,12 @@ export function ProProvider({ children }: { children: ReactNode }) {
         }
         return res;
       },
+      revokeMockPro: backend.devRevoke
+        ? async () => {
+            await backend.devRevoke!();
+            if (mounted.current) cacheEntitlement(false);
+          }
+        : null,
       devMode,
       setDevMode: (m) => {
         setDevModeState(m);

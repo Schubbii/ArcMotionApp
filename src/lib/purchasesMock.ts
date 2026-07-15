@@ -43,5 +43,9 @@ export function createMockBackend(): PurchasesBackend {
       listeners.add(cb);
       return () => listeners.delete(cb);
     },
+    async devRevoke() {
+      await saveJSON(STORAGE_KEYS.proMock, false);
+      emit(false);
+    },
   };
 }

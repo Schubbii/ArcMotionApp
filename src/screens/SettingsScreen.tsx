@@ -21,7 +21,19 @@ export function SettingsScreen({ onOpenPaywall }: { onOpenPaywall: () => void })
     settings, setTheme, setUnit, setWeightStep, setRepStep, setName, workouts,
     exercises, exportSnapshot, restoreBackup, importFitNotes, undoTs, restoreLastSnapshot,
   } = useAppData();
-  const { isPro, mode, restore, restoring, devMode, setDevMode, devToolsEnabled } = usePro();
+  const { isPro, mode, restore, restoring, revokeMockPro, devMode, setDevMode, devToolsEnabled } = usePro();
+
+  const onRevokeMock = () => {
+    if (!revokeMockPro) return;
+    showDialog(
+      "Switch back to Free?",
+      "This removes the test-mode purchase so you can see the app as a free user again. You can re-unlock it anytime from the paywall.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Back to Free", style: "destructive", onPress: () => { revokeMockPro(); } },
+      ]
+    );
+  };
 
   const onRestorePurchases = async () => {
     const res = await restore();
@@ -192,6 +204,17 @@ export function SettingsScreen({ onOpenPaywall }: { onOpenPaywall: () => void })
                 <Text style={{ color: t.textMuted, fontWeight: "700", fontSize: 14, flex: 1 }}>
                   {restoring ? "Restoring…" : "Restore purchases"}
                 </Text>
+                <Text style={{ color: t.textMuted, fontSize: 18 }}>›</Text>
+              </TouchableOpacity>
+            )}
+            {mode === "mock" && revokeMockPro && (
+              <TouchableOpacity onPress={onRevokeMock} style={[styles.dataRow, { borderTopWidth: 1, borderTopColor: t.border, marginTop: 6 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: t.danger, fontWeight: "700", fontSize: 14 }}>Switch back to Free</Text>
+                  <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 2 }}>
+                    Test mode only — removes the mock purchase
+                  </Text>
+                </View>
                 <Text style={{ color: t.textMuted, fontSize: 18 }}>›</Text>
               </TouchableOpacity>
             )}

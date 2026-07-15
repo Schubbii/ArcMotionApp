@@ -43,4 +43,10 @@ export interface PurchasesBackend {
   restore(): Promise<PurchaseResult>;
   /** Subscribe to entitlement changes; returns an unsubscribe function. */
   subscribe(cb: (isPro: boolean) => void): () => void;
+  /**
+   * Remove the fake purchase again (mock/test mode only). Real subscriptions
+   * are cancelled through the store account, so the RevenueCat backend
+   * deliberately doesn't implement this.
+   */
+  devRevoke?(): Promise<void>;
 }
